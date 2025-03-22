@@ -81,6 +81,6 @@ export const verifyOtp = apiHandler(async (req, res) => {
 
     // 🔹 Remove OTP after successful login
     otpStore.delete(phone);
-
-    return ResponseHandler.success(res, 200, "OTP verified successfully!", { token, user });
+console.log("role",role)
+    return ResponseHandler.success(res, 200, "OTP verified successfully!", { token, user,role});
 });

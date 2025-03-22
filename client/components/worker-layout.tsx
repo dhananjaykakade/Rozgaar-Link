@@ -1,64 +1,59 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useAuth } from "@/context/auth-context"
-import { useLanguage } from "@/context/language-context"
-import { useRouter, usePathname } from "next/navigation"
-import { useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { LayoutDashboard, ClipboardList, UserCircle, MessageSquare, LogOut, Menu } from "lucide-react"
-import Link from "next/link"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { cn } from "@/lib/utils"
-import { LanguageSelector } from "@/components/language-selector"
+import type React from "react";
+import { useSelector } from "react-redux"; // ✅ Import Redux Hook
+import { selectAuth, logout } from "@/store/slices/authSlice"; // ✅ Import Redux selectors & actions
+import { useLanguage } from "@/context/language-context";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { LayoutDashboard, ClipboardList, UserCircle, MessageSquare, LogOut, Menu } from "lucide-react";
+import Link from "next/link";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+import { LanguageSelector } from "@/components/language-selector";
+import { useDispatch } from "react-redux";
 
 interface WorkerLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function WorkerLayout({ children }: WorkerLayoutProps) {
-  const { user, logout, loading } = useAuth()
-  const { t } = useLanguage()
-  const router = useRouter()
-  const pathname = usePathname()
+  const { t } = useLanguage();
+  const router = useRouter();
+  const pathname = usePathname();
+  const dispatch = useDispatch();
+  
+  // ✅ Get user data from Redux Store
+  const { user, loading } = useSelector(selectAuth);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "worker")) {
-      router.push("/auth/login?role=worker")
+      router.push("/auth/login?role=worker");
     }
-  }, [user, loading, router])
+  }, [user, loading, router, pathname]);
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
-    )
+    );
   }
 
+  if (!user) return null; // ✅ Prevents flash of login page
+
   const navItems = [
-    {
-      name: t("worker.dashboard"),
-      href: "/worker/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      name: t("worker.applications"),
-      href: "/worker/applications",
-      icon: ClipboardList,
-    },
-    {
-      name: t("worker.messages"),
-      href: "/worker/messages",
-      icon: MessageSquare,
-    },
-    {
-      name: t("worker.profile"),
-      href: "/worker/profile",
-      icon: UserCircle,
-    },
-  ]
+    { name: t("worker.dashboard"), href: "/worker/dashboard", icon: LayoutDashboard },
+    { name: t("worker.applications"), href: "/worker/applications", icon: ClipboardList },
+    { name: t("worker.messages"), href: "/worker/messages", icon: MessageSquare },
+    { name: t("worker.profile"), href: "/worker/profile", icon: UserCircle },
+  ];
+
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push("/auth/login?role=worker");
+  };
 
   const NavItems = () => (
     <>
@@ -68,7 +63,7 @@ export function WorkerLayout({ children }: WorkerLayoutProps) {
           href={item.href}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent",
-            pathname === item.href ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+            pathname === item.href ? "bg-accent text-accent-foreground" : "text-muted-foreground"
           )}
         >
           <item.icon className="h-4 w-4" />
@@ -78,13 +73,13 @@ export function WorkerLayout({ children }: WorkerLayoutProps) {
       <Button
         variant="ghost"
         className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent text-muted-foreground justify-start font-normal"
-        onClick={logout}
+        onClick={handleLogout}
       >
         <LogOut className="h-4 w-4" />
         {t("worker.logout")}
       </Button>
     </>
-  )
+  );
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -136,6 +131,5 @@ export function WorkerLayout({ children }: WorkerLayoutProps) {
         <main className="flex-1">{children}</main>
       </div>
     </div>
-  )
+  );
 }
-

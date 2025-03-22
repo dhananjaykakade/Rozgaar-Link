@@ -41,6 +41,7 @@ model Worker {
   Skills         String[]
   WorkExperience String?
   Education      String?
+  IsVerified     Boolean  @default(false) 
   DocumentsId    String?      @db.ObjectId
   Documents      Document?    @relation(fields: [DocumentsId], references: [Id])
   Rating         Float        @default(0.0)

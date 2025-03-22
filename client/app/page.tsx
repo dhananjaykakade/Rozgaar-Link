@@ -24,40 +24,40 @@ export default function Home() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <HardHatIcon className="h-6 w-6" />
-                For Workers
-              </CardTitle>
-              <CardDescription>Find jobs matching your skills and location</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <span className="text-green-500">✓</span>
-                  <span>Create a profile with your skills and experience</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-500">✓</span>
-                  <span>Browse jobs matching your skills and location</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-500">✓</span>
-                  <span>Apply for jobs with a single click</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-500">✓</span>
-                  <span>Chat directly with employers</span>
-                </li>
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <Link href="/auth/login?role=worker" className="w-full">
-                <Button className="w-full">Join as Worker</Button>
-              </Link>
-            </CardFooter>
-          </Card>
+        <Card className="flex flex-col h-full">
+  <CardHeader>
+    <CardTitle className="flex items-center gap-2">
+      <HardHatIcon className="h-6 w-6" />
+      For Workers
+    </CardTitle>
+    <CardDescription>Find jobs matching your skills and location</CardDescription>
+  </CardHeader>
+  <CardContent className="flex-1">
+    <ul className="space-y-2">
+      <li className="flex items-start gap-2">
+        <span className="text-green-500">✓</span>
+        <span>Create a profile with your skills and experience</span>
+      </li>
+      <li className="flex items-start gap-2">
+        <span className="text-green-500">✓</span>
+        <span>Browse jobs matching your skills and location</span>
+      </li>
+      <li className="flex items-start gap-2">
+        <span className="text-green-500">✓</span>
+        <span>Apply for jobs with a single click</span>
+      </li>
+      <li className="flex items-start gap-2">
+        <span className="text-green-500">✓</span>
+        <span>Chat directly with employers</span>
+      </li>
+    </ul>
+  </CardContent>
+  <CardFooter className="mt-auto">
+    <Link href="/auth/login?role=worker" className="w-full">
+      <Button className="w-full">Join as Worker</Button>
+    </Link>
+  </CardFooter>
+</Card>
 
           <Card>
             <CardHeader>

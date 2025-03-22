@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,4 +7,98 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Availability {
+  IMMEDIATE
+  WITHIN_ONE_WEEK
+  WITHIN_TWO_WEEKS
+  WITHIN_A_MONTH
+}
 
+enum JobStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  PENDING
+}
+
+enum NumberOfWorkers {
+  ONE
+  TWO
+  THREE
+  FOUR
+  FIVE
+  TEN_PLUS
+}
+
+model Worker {
+  Id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  FirstName      String
+  LastName       String
+  Address        String
+  City           String
+  Pin            String
+  Availability   Availability
+  Skills         String[]
+  WorkExperience String?
+  Education      String?
+  DocumentsId    String?      @db.ObjectId
+  Documents      Document?    @relation(fields: [DocumentsId], references: [Id])
+  Rating         Float        @default(0.0)
+  CreatedAt      DateTime     @default(now())
+  Job            Job?         @relation(fields: [jobId], references: [Id])
+  jobId          String?      @db.ObjectId
+}
+
+model Employer {
+  Id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  Name              String
+  Phone             String   @unique
+  CompanyName       String?
+  ContactPerson     String
+  Email             String?
+  Website           String?
+  Address           String
+  City              String
+  Pin               String
+  DescriptionOfWork String
+  Rating            Float    @default(0.0)
+  CreatedAt         DateTime @default(now())
+  Job               Job[]
+}
+
+model Job {
+  Id                     String          @id @default(auto()) @map("_id") @db.ObjectId
+  Title                  String
+  Description            String
+  Employer               Employer        @relation(fields: [EmployerId], references: [Id])
+  EmployerId             String          @db.ObjectId
+  Location               String
+  Pay                    Float
+  Skills                 String[]
+  Applicants             Worker[]
+  WorkingHours           String
+  StartDate              DateTime
+  NumberOfWorkers        NumberOfWorkers
+  AdditionalRequirements String?
+  Status                 JobStatus       @default(ACTIVE)
+  CreatedAt              DateTime        @default(now())
+}
+
+model Rating {
+  Id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  GivenBy    String   @db.ObjectId // ID of the Worker or Employer giving the rating
+  ReceivedBy String   @db.ObjectId // ID of the Worker or Employer receiving the rating
+  Rating     Float    @default(0.0)
+  Review     String?
+  Details    String?
+  Feedback   String?
+  CreatedAt  DateTime @default(now())
+}
+
+model Document {
+  Id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  IdProof      String // Mandatory
+  AddressProof String // Mandatory
+  SkillsProof  String? // Optional
+  Worker       Worker[]
+}

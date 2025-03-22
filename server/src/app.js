@@ -12,7 +12,7 @@ import EmployerRoute from "./routes/employer.route.js";
 import JobRoute from "./routes/job.route.js";
 import ratingRoute from "./routes/rating.route.js";
 import authRoutes from "./routes/auth.js";
-
+import findWorkersRoutes from './routes/findworkers.js';
 
 
 const app = express();
@@ -55,6 +55,8 @@ app.use("/api", WorkerRoute);
 app.use("/api", EmployerRoute);
 app.use("/api", JobRoute);
 app.use("/api", ratingRoute);
+app.use('/api', findWorkersRoutes);
+
 
 
 app.use((req, res, next) => {

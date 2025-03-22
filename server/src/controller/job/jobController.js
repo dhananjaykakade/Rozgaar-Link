@@ -299,3 +299,58 @@ export const updateApplicationStatus = apiHandler(async (req, res) => {
 
         return ResponseHandler.success(res, 200, "Application status updated successfully", updatedApplication);
     })
+
+    // create route to get job application posted by single user 
+    export const getAllJobsBySingleUser = apiHandler(async (req,res) => {
+        const { id } = req.params; // User ID
+        // �� Fetch all jobs posted by this user follow below data structure
+        // {
+        //     "_id": {
+        //       "$oid": "67deb38dac87083c469208fc"
+        //     },
+        //     "Title": "Electrician Needed",
+        //     "Description": "Looking for an experienced electrician for a home wiring project.",
+        //     "EmployerId": {
+        //       "$oid": "67de8f6145cdb206f77da214"
+        //     },
+        //     "Location": "New York",
+        //     "Pay": 500,
+        //     "Skills": [
+        //       "Electrician",
+        //       "Wiring"
+        //     ],
+        //     "WorkingHours": "9 AM - 5 PM",
+        //     "StartDate": {
+        //       "$date": "2025-03-25T09:00:00.000Z"
+        //     },
+        //     "NumberOfWorkers": "ONE",
+        //     "AdditionalRequirements": "Must have valid license",
+        //     "Status": "ACTIVE",
+        //     "CreatedAt": {
+        //       "$date": "2025-03-22T12:56:45.108Z"
+        //     }
+        //   }
+        const jobs = await prisma.job.findMany({
+            where: { EmployerId: id },
+            select: {
+                Id: true,
+                Title: true,
+                Description: true,
+                EmployerId: true,
+                Location: true,
+                Pay: true,
+                Skills: true,
+                WorkingHours: true,
+                StartDate: true,
+                NumberOfWorkers: true,
+                AdditionalRequirements: true,
+                Status: true,
+                CreatedAt: true,
+                Employer: { select: { Name: true } }
+            }
+        });
+        return ResponseHandler.success(res, 200, "Jobs retrieved successfully", jobs);
+
+      
+    })
+

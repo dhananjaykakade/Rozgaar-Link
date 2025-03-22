@@ -1,10 +1,13 @@
+
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/context/auth-context"
+
 import { LanguageProvider } from "@/context/language-context"
+import { Providers } from "@/components/providers";
+
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -24,7 +27,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <LanguageProvider>
-            <AuthProvider>{children}</AuthProvider>
+          <Providers>
+            {children}
+            </Providers>
           </LanguageProvider>
         </ThemeProvider>
       </body>

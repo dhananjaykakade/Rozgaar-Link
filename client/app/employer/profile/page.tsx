@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import axios from "axios";
 import { EmployerLayout } from "@/components/employer-layout"
 import { useLanguage } from "@/context/language-context"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,7 +13,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { useState } from "react"
+import { useState,useEffect} from "react"
+import { selectAuth, updateProfile } from "@/store/slices/authSlice"; 
+import { useSelector, useDispatch } from "react-redux";
+import { fetchEmployerJobsApi } from "@/lib/api";
+import { fetchJobsFailure, fetchJobsStart, fetchJobsSuccess, selectJobPostedState } from "@/store/slices/jobSlice";
+import { Job } from "@/types/job";
+
 import { Camera, MapPin, Phone, Mail, Star, Briefcase, Edit, Building, Calendar, Users } from "lucide-react"
 import {
   Dialog,
@@ -140,37 +146,104 @@ const EMPLOYER = {
 
 export default function EmployerProfilePage() {
   const { t } = useLanguage()
+  const { user } = useSelector(selectAuth); 
   const { toast } = useToast()
   const [saving, setSaving] = useState(false)
+  
   const [editMode, setEditMode] = useState(false)
   const [profileData, setProfileData] = useState({
-    companyName: EMPLOYER.companyName,
-    contactPerson: EMPLOYER.contactPerson,
-    address: EMPLOYER.address,
-    city: EMPLOYER.city,
-    pincode: EMPLOYER.pincode,
-    website: EMPLOYER.website,
-    description: EMPLOYER.description,
-  })
+    companyName: user?.CompanyName || "",
+    contactPerson: user?.ContactPerson || "",
+    address: user?.Address || "",
+    city: user?.City || "",
+    pincode: user?.Pin || "",
+    website: user?.Website || "",
+    description: user?.DescriptionOfWork || "",
+    rating: user?.Rating || 0,
+    reviews: user?.Reviews || 0,
+    memberSince: user?.MemberSince || "",
+    jobsPosted: user?.JobsPosted || 0,
+    activeJobs: user?.ActiveJobs || 0,
+    Phone: user?.Phone || "",
+    descriptionOfWork:user?.DescriptionOfWork || "",
+  });
   const [showRatingDetails, setShowRatingDetails] = useState(false)
   const [selectedRating, setSelectedRating] = useState<(typeof EMPLOYER.ratings)[0] | null>(null)
+  const [loadingJobs, setLoadingJobs] = useState(true);
+  const dispatch = useDispatch();
+  const { jobsPosted, loading } = useSelector(selectJobPostedState) || { jobsPosted: [], loading: false };
+  const [reviews, setReviews] = useState<{ Id: string; GivenBy: string; Rating: number; Review: string; CreatedAt: string }[]>([]);
+  const [RatingCount, setRatingCount] = useState(Number)
 
-  const handleSaveProfile = () => {
-    setSaving(true)
+  console.log(profileData)
+  console.log(jobsPosted)
+  const handleSaveProfile =async () => {
+    console.log(user.Id)
+    setSaving(true);
+    try {
+      await axios.put(
+        `http://localhost:4000/api/employer/${user.Id}`,
+        {
+          CompanyName: profileData?.companyName,
+          ContactPerson: profileData?.contactPerson,
+          Website: profileData?.website,
+          Address: profileData?.address,
+          City: profileData?.city,
+          Pin: profileData?.pincode,
+          DescriptionOfWork: profileData?.descriptionOfWork,
+        },
+      );
+  
+      dispatch(updateProfile(user)); // ✅ Update Redux Store
+      toast({ title: "Profile Updated", description: "Your company profile has been updated successfully" });
+      setEditMode(false);
+    } catch (error) {
+      toast({ title: "Update Failed", description: "Could not update profile.", variant: "destructive" });
+    }
+    setSaving(false);
+  };
 
-    // Simulate API call
-    setTimeout(() => {
-      setSaving(false)
-      setEditMode(false)
-      toast({
-        title: "Profile Updated",
-        description: "Your company profile has been updated successfully",
-      })
-    }, 1500)
-  }
+
+  useEffect(() => {
+    if (!user?.Id) return;
+
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4000/api/employer/${user.Id}`
+
+        );
+
+        const employer = response.data.data;
+        console.log("update profile",employer)
+        dispatch(updateProfile(employer)); // ✅ Update Redux Store
+      } catch (error) {
+        console.error("Error fetching employer profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, [user?.Id, dispatch]);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4000/api/rating/67de8f6145cdb206f77da21a`); // Replace with actual API
+        setReviews(response.data.data); // Assuming response.data.data contains the array
+        // count rating from data length
+        setRatingCount(response.data.data.length);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    };
+  
+    if (user?.Id) {
+      fetchReviews();
+    }
+  }, [user?.Id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target
+    
     setProfileData({
       ...profileData,
       [id]: value,
@@ -197,6 +270,30 @@ export default function EmployerProfilePage() {
 
   const profileCompletionPercentage = calculateProfileCompletion()
 
+
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      dispatch(fetchJobsStart());
+
+      try {
+        const response = await axios.get(`http://localhost:4000/api/job/${user?.Id}/jobs`); // Fetch jobs
+        console.log(response.data.data)
+        dispatch(fetchJobsSuccess(response.data.data)); 
+      } catch (error) {
+        dispatch(fetchJobsFailure());
+      }
+    };
+
+    fetchJobs();
+  }, [dispatch]);
+
+  // make function to calulate average star and render star
+  const calculateAverageStar = () => {
+    if (reviews.length === 0) return 0;
+    const totalStars = reviews.reduce((sum, review) => sum + review.Rating, 0);
+    return totalStars / reviews.length;
+  }
   // Render star rating
   const renderStars = (rating: number) => {
     return (
@@ -237,37 +334,41 @@ export default function EmployerProfilePage() {
                 <div className="flex flex-col items-center">
                   <div className="relative mb-4">
                     <Avatar className="h-24 w-24">
-                      <AvatarFallback className="text-xl">{EMPLOYER.companyName.charAt(0)}</AvatarFallback>
+                    {!user ? (
+  <AvatarFallback className="text-xl">A</AvatarFallback>
+) : (
+  <AvatarFallback className="text-xl">{user.companyName?.charAt(0) || "U"}</AvatarFallback>
+)}
                     </Avatar>
                     <Button size="icon" variant="secondary" className="absolute bottom-0 right-0 h-8 w-8 rounded-full">
                       <Camera className="h-4 w-4" />
                       <span className="sr-only">Upload logo</span>
                     </Button>
                   </div>
-                  <h2 className="text-xl font-bold">{EMPLOYER.companyName}</h2>
+                  <h2 className="text-xl font-bold">{user?.companyName}</h2>
                   <div className="flex items-center gap-1 mt-1">
                     <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                    <span className="font-medium">{EMPLOYER.rating}</span>
-                    <span className="text-muted-foreground">({EMPLOYER.reviews} reviews)</span>
+                    <span className="font-medium">{user?.rating}</span>
+                    <span className="text-muted-foreground">({user?.reviews} reviews)</span>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">Member since {EMPLOYER.memberSince}</p>
+                  <p className="text-sm text-muted-foreground mt-1">Member since {user?.memberSince}</p>
 
                   <div className="mt-4 w-full space-y-2">
                     <div className="flex items-center gap-2 text-sm">
                       <Building className="h-4 w-4 text-muted-foreground" />
-                      <span>{EMPLOYER.contactPerson}</span>
+                      <span>{user?.contactPerson}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{EMPLOYER.address}</span>
+                      <span>{user?.address}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span>{EMPLOYER.phone}</span>
+                      <span>{user?.Number}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span>{EMPLOYER.email}</span>
+                      <span>{user?.email}</span>
                     </div>
                   </div>
                 </div>
@@ -294,28 +395,28 @@ export default function EmployerProfilePage() {
                         <Briefcase className="h-4 w-4 text-muted-foreground" />
                         <span>Jobs Posted</span>
                       </div>
-                      <p className="font-medium text-lg">{EMPLOYER.jobsPosted}</p>
+                      <p className="font-medium text-lg">{user?.jobsPosted}</p>
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span>Active Jobs</span>
                       </div>
-                      <p className="font-medium text-lg">{EMPLOYER.activeJobs}</p>
+                      <p className="font-medium text-lg">{user?.activeJobs}</p>
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-muted-foreground" />
                         <span>Workers Hired</span>
                       </div>
-                      <p className="font-medium text-lg">{EMPLOYER.hiredCount}</p>
+                      <p className="font-medium text-lg">{user?.hiredCount}</p>
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Star className="h-4 w-4 text-muted-foreground" />
                         <span>Rating</span>
                       </div>
-                      <p className="font-medium text-lg">{EMPLOYER.rating}/5</p>
+                      <p className="font-medium text-lg">{user?.rating}/5</p>
                     </div>
                   </div>
                 </div>
@@ -361,13 +462,13 @@ export default function EmployerProfilePage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone Number</Label>
-                      <Input id="phone" value={EMPLOYER.phone} disabled />
+                      <Input id="phone" value={user.phone} disabled />
                       <p className="text-xs text-muted-foreground">Phone number cannot be changed</p>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" value={EMPLOYER.email} disabled />
+                      <Input id="email" value={user.email} disabled />
                       <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                     </div>
 
@@ -430,118 +531,120 @@ export default function EmployerProfilePage() {
               </TabsContent>
 
               <TabsContent value="jobs" className="mt-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Job History</CardTitle>
-                    <CardDescription>Jobs you have posted</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {EMPLOYER.postedJobs.length > 0 ? (
-                      <div className="space-y-4">
-                        {EMPLOYER.postedJobs.map((job) => (
-                          <div key={job.id} className="border rounded-lg p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h3 className="font-medium">{job.title}</h3>
-                                <p className="text-sm text-muted-foreground">{job.location}</p>
-                              </div>
-                              <Badge variant={job.status === "active" ? "default" : "secondary"}>
-                                {job.status === "active" ? "Active" : "Completed"}
-                              </Badge>
-                            </div>
+  <Card>
+    <CardHeader>
+      <CardTitle>Job History</CardTitle>
+      <CardDescription>Jobs you have posted</CardDescription>
+    </CardHeader>
+    <CardContent>
+      {jobsPosted && jobsPosted.length > 0 ? (
+        <div className="space-y-4">
+          {jobsPosted.map((job) => (
+            <div key={job?.Id} className="border rounded-lg p-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-medium">{job?.Title || "No Title"}</h3>
+                  <p className="text-sm text-muted-foreground">{job.Location || "No Location"}</p>
+                </div>
+                <Badge variant={job?.Status === "ACTIVE" ? "default" : "secondary"}>
+                  {job?.Status === "ACTIVE" ? "Active" : "Completed"}
+                </Badge>
+              </div>
 
-                            <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                              <div>
-                                <span className="text-muted-foreground">Wage: </span>
-                                <span>{job.wage}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Duration: </span>
-                                <span>{job.duration}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Applicants: </span>
-                                <span>{job.applicants}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Hired: </span>
-                                <span>{job.hired}</span>
-                              </div>
-                            </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Wage: </span>
+                  <span>₹{job?.Pay || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Duration: </span>
+                  <span>{job?.WorkingHours || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Applicants: </span>
+                  <span>{job?.Applicants ? job?.Applicants.length : 0}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Hired: </span>
+                  <span>{job?.hired || 0}</span> {/* Add actual hired count logic */}
+                </div>
+              </div>
 
-                            <div className="mt-3 flex justify-between items-center">
-                              <p className="text-xs text-muted-foreground">Posted on {job.postedOn}</p>
-                              {job.status === "active" && (
-                                <Button variant="outline" size="sm" asChild>
-                                  <a href={`/employer/job/${job.id}/applications`}>View Applications</a>
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">No jobs posted yet</p>
-                        <Button variant="outline" className="mt-2" asChild>
-                          <a href="/employer/job/new">Post a Job</a>
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+              <div className="mt-3 flex justify-between items-center">
+                <p className="text-xs text-muted-foreground">
+                  Posted on {new Date(job?.CreatedAt).toLocaleDateString() || "N/A"}
+                </p>
+                {job?.Status === "ACTIVE" && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`/employer/job/${job.Id}/applications`}>View Applications</a>
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No jobs posted yet</p>
+          <Button variant="outline" className="mt-2" asChild>
+            <a href="/employer/job/new">Post a Job</a>
+          </Button>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+</TabsContent>
 
-              <TabsContent value="ratings" className="mt-4">
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle>Ratings & Reviews</CardTitle>
-                        <CardDescription>Feedback from workers</CardDescription>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-2xl font-bold">{EMPLOYER.rating}</div>
-                        <div className="flex">{renderStars(EMPLOYER.rating)}</div>
-                        <div className="text-sm text-muted-foreground">({EMPLOYER.reviews})</div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {EMPLOYER.ratings.length > 0 ? (
-                      <div className="space-y-4">
-                        {EMPLOYER.ratings.map((rating) => (
-                          <div key={rating.id} className="border rounded-lg p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h3 className="font-medium">{rating.worker}</h3>
-                                <div className="flex items-center gap-1 mt-1">{renderStars(rating.rating)}</div>
-                              </div>
-                              <p className="text-sm text-muted-foreground">{rating.date}</p>
-                            </div>
 
-                            <div className="mt-2">
-                              <p className="text-sm italic">"{rating.feedback}"</p>
-                            </div>
-
-                            <Button
-                              variant="link"
-                              className="text-xs p-0 h-auto mt-2"
-                              onClick={() => viewRatingDetails(rating)}
-                            >
-                              View Details
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">No ratings yet</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+<TabsContent value="ratings" className="mt-4">
+  <Card>
+    <CardHeader>
+      <div className="flex justify-between items-center">
+        <div>
+          <CardTitle>Ratings & Reviews</CardTitle>
+          <CardDescription>Feedback from workers</CardDescription>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="text-2xl font-bold">{RatingCount || 0}</div>
+          {reviews.length > 0 ? (
+  <div className="flex">{renderStars(calculateAverageStar())}</div>
+) : (
+  <div className="flex">{renderStars(0)}</div>
+)}
+        </div>
+      </div>
+    </CardHeader>
+    <CardContent>
+      {reviews.length > 0 ? (
+        <div className="space-y-4">
+          {reviews.map((review) => (
+            <div key={review.Id} className="border rounded-lg p-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-medium">{review.GivenBy || "Anonymous"}</h3>
+                  <div className="flex items-center gap-1 mt-1">{renderStars(review.Rating)}</div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {new Date(review.CreatedAt).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="mt-2">
+                <p className="text-sm italic">"{review.Review || "No feedback provided"}"</p>
+              </div>
+              <Button variant="link" className="text-xs p-0 h-auto mt-2">
+                View Details
+              </Button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No ratings yet</p>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+</TabsContent>
             </Tabs>
           </div>
         </div>
@@ -582,4 +685,3 @@ export default function EmployerProfilePage() {
     </EmployerLayout>
   )
 }
-

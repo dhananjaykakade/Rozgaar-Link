@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useAuth } from "@/context/auth-context"
+
 import { useLanguage } from "@/context/language-context"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -15,9 +15,12 @@ import { BriefcaseIcon, HardHatIcon, ArrowLeftIcon } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { LanguageSelector } from "@/components/language-selector"
+import { sendOtpApi } from "@/lib/api";
+import { useRouter } from "next/navigation";
+
 
 export default function LoginPage() {
-  const { login } = useAuth()
+  const router = useRouter();
   const { t } = useLanguage()
   const searchParams = useSearchParams()
   const defaultRole = searchParams.get("role") as "worker" | "employer" | null
@@ -27,36 +30,41 @@ export default function LoginPage() {
   const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const trimmedPhoneNumber = phoneNumber.trim()
-
-    if (!trimmedPhoneNumber || trimmedPhoneNumber.length < 10) {
+    e.preventDefault();
+  
+    let formattedPhoneNumber = phoneNumber.trim();
+  
+    // ✅ Ensure phone number starts with +91
+    if (!formattedPhoneNumber.startsWith("+91")) {
+      formattedPhoneNumber = `+91${formattedPhoneNumber}`;
+    }
+  
+    if (formattedPhoneNumber.length !== 13) {
       toast({
         title: "Invalid phone number",
-        description: "Please enter a valid phone number",
+        description: "Please enter a valid 10-digit phone number with country code (+91).",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
-
-    setIsSubmitting(true)
-
+  
+    setIsSubmitting(true);
+  
     try {
-      await login(trimmedPhoneNumber, role)
-      toast({
-        title: "OTP Sent",
-        description: "Please check your phone for the OTP",
-      })
-    } catch (error) {
+      await sendOtpApi(formattedPhoneNumber, role);
+      toast({ title: "OTP Sent", description: "Please check your phone for the OTP" });
+  
+      // 🚀 Redirect to OTP verification page
+      router.push(`/auth/verify?phone=${encodeURIComponent(formattedPhoneNumber)}&role=${encodeURIComponent(role)}`);
+    } catch (error: any) {
       toast({
         title: "Login failed",
-        description: "Failed to send OTP. Please try again.",
+        description: error.response?.data?.message || "Failed to send OTP.",
         variant: "destructive",
-      })
-      setIsSubmitting(false)
+      });
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-muted/40">

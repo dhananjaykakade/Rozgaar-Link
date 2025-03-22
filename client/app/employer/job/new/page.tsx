@@ -3,6 +3,9 @@
 import type React from "react";
 
 import { EmployerLayout } from "@/components/employer-layout";
+
+import { useSelector } from "react-redux";
+import { selectAuth } from "@/store/slices/authSlice"; // Import selector
 import {
   Card,
   CardContent,
@@ -27,6 +30,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { handlePostJob } from "@/lib/jobApi";
 import {
   PlusCircle,
   X,
@@ -37,32 +41,28 @@ import {
 } from "lucide-react";
 
 interface JobFormData {
-  jobTitle: string;
-  jobDescription: string;
-  location: string;
-  fullAddress: string;
-  dailyWage: number;
-  duration: number;
-  workingHours: string;
-  startDate: string;
-  numberOfWorkers: string;
-
-  additionalRequirements: string;
+  Title: string;
+  Description: string;
+  Location: string;
+  WorkingHours: string;
+  Pay: number;
+  StartDate: string; // ✅ Fixed casing to match API (startDate → StartDate)
+  NumberOfWorkers: string; // ✅ Fixed casing (numberOfWorkers → NumberOfWorkers)
+  Skills: string[]; // ✅ Fixed array type (Skills:[string] → Skills: string[])
+  AdditionalRequirements?: string; // ✅ Removed duplicate & made optional
 }
 
 export default function NewJobPage() {
   const [formData, setFormData] = useState<JobFormData>({
-    jobTitle: "",
-    jobDescription: "",
-    location: "",
-    fullAddress: "",
-    dailyWage: 0,
-    duration: 0,
-    workingHours: "",
-    startDate: "",
-    numberOfWorkers: "1",
-
-    additionalRequirements: "",
+    Title: "",
+    Description: "",
+    Location: "",
+    Pay: 0, // Changed from dailyWage to Pay
+    Skills: [], // Added array for skills
+    WorkingHours: "",
+    StartDate: "", // Kept as string, will format before sending
+    NumberOfWorkers: "ONE", // Backend expects specific values
+    AdditionalRequirements: "",
   });
 
   const { toast } = useToast();
@@ -81,30 +81,14 @@ export default function NewJobPage() {
   const handleRemoveSkill = (skill: string) => {
     setSkills(skills.filter((s) => s !== skill));
   };
+  const { user } = useSelector(selectAuth);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
     console.log(formData);
-    if (skills.length === 0) {
-      toast({
-        title: "Missing skills",
-        description: "Please add at least one required skill",
-        variant: "destructive",
-      });
-      return;
-    }
+   
+      await handlePostJob(formData, user, skills, setSubmitting, toast, router);
 
-    setSubmitting(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setSubmitting(false);
-      toast({
-        title: "Job Posted",
-        description: "Your job has been posted successfully",
-      });
-      router.push("/employer/dashboard");
-    }, 1500);
   };
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -128,234 +112,186 @@ export default function NewJobPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="title">Job Title</Label>
-              <Input
-                id="j"
-                name="jobTitle"
-                // type="text"
-                placeholder="e.g. Construction Helper"
-                onChange={handleChange}
-                value={formData.jobTitle}
-                required
-              />
-            </div>
+  <div className="space-y-2">
+    <Label htmlFor="title">Job Title</Label>
+    <Input
+      id="title"
+      name="Title"
+      placeholder="e.g. Electrician Needed"
+      onChange={handleChange}
+      value={formData.Title}
+      required
+    />
+  </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Job Description</Label>
-              <Textarea
-                id="description"
-                name="jobDescription"
-                placeholder="Describe the job in detail"
-                onChange={handleChange}
-                value={formData.jobDescription}
-                className="min-h-32"
-                required
-              />
-            </div>
+  <div className="space-y-2">
+    <Label htmlFor="description">Job Description</Label>
+    <Textarea
+      id="description"
+      name="Description"
+      placeholder="Describe the job in detail"
+      onChange={handleChange}
+      value={formData.Description}
+      className="min-h-32"
+      required
+    />
+  </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
-                <div className="flex">
-                  <div className="relative flex-1">
-                    <MapPin className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="location"
-                      name="location"
-                      className="pl-8"
-                      placeholder="e.g. Andheri East, Mumbai"
-                      onChange={handleChange}
-                      value={formData.location}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-2">
+      <Label htmlFor="location">Location</Label>
+      <div className="relative flex-1">
+        <MapPin className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          id="location"
+          name="Location"
+          className="pl-8"
+          placeholder="e.g. New York"
+          onChange={handleChange}
+          value={formData.Location}
+          required
+        />
+      </div>
+    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="address">Full Address</Label>
-                <Input
-                  id="address"
-                  name="fullAddress"
-                  placeholder="e.g. Near Metro Station, Andheri East"
-                  onChange={handleChange}
-                  value={formData.fullAddress}
-                  required
-                />
-              </div>
-            </div>
+    <div className="space-y-2">
+      <Label htmlFor="wage">Daily Wage (₹)</Label>
+      <div className="relative flex-1">
+        <IndianRupee className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          id="wage"
+          name="Pay"
+          type="number"
+          className="pl-8"
+          placeholder="e.g. 500"
+          onChange={handleChange}
+          value={formData.Pay}
+          required
+        />
+      </div>
+    </div>
+  </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="wage">Daily Wage (₹)</Label>
-                <div className="flex">
-                  <div className="relative flex-1">
-                    <IndianRupee className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="wage"
-                      name="dailyWage"
-                      type="number"
-                      className="pl-8"
-                      placeholder="e.g. 600"
-                      onChange={handleChange}
-                      value={formData.dailyWage}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-2">
+      <Label htmlFor="workingHours">Working Hours</Label>
+      <div className="relative flex-1">
+        <Clock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          id="workingHours"
+          name="WorkingHours"
+          className="pl-8"
+          placeholder="e.g. 9 AM - 5 PM"
+          onChange={handleChange}
+          value={formData.WorkingHours}
+          required
+        />
+      </div>
+    </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="duration">Duration (Days)</Label>
-                <div className="flex">
-                  <div className="relative flex-1">
-                    <Calendar className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="duration"
-                      name="duration"
-                      type="number"
-                      className="pl-8"
-                      placeholder="e.g. 15"
-                      onChange={handleChange}
-                      value={formData.duration}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
+    <div className="space-y-2">
+      <Label htmlFor="startDate">Start Date</Label>
+      <Input
+        id="startDate"
+        name="StartDate"
+        type="date"
+        onChange={handleChange}
+        value={formData.StartDate}
+        required
+      />
+    </div>
+  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="workingHours">Working Hours</Label>
-                <div className="flex">
-                  <div className="relative flex-1">
-                    <Clock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="workingHours"
-                      type="number"
-                      name="workingHours"
-                      className="pl-8"
-                      placeholder="e.g. 8 AM - 5 PM"
-                      onChange={handleChange}
-                      value={formData.workingHours}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+  <div className="space-y-2">
+    <Label htmlFor="workers">Number of Workers Needed</Label>
+    <Select
+      name="NumberOfWorkers"
+      value={formData.NumberOfWorkers}
+      onValueChange={(value) =>
+        handleChange({ target: { name: "NumberOfWorkers", value, type: "text" } } as React.ChangeEvent<HTMLInputElement>)
+      }
+    >
+      <SelectTrigger id="workers">
+        <SelectValue placeholder="Select number of workers" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="ONE">1</SelectItem>
+        <SelectItem value="TWO">2</SelectItem>
+        <SelectItem value="THREE">3</SelectItem>
+        <SelectItem value="FOUR">4</SelectItem>
+        <SelectItem value="FIVE">5</SelectItem>
+        <SelectItem value="TEN_PLUS">10+</SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  onChange={handleChange}
-                  value={formData.startDate}
-                  required
-                />
-              </div>
+  <Separator />
 
-              <div className="space-y-2">
-                <Label htmlFor="workers">Number of Workers Needed</Label>
-                <Select defaultValue="1">
-                  <SelectTrigger id="workers">
-                    <SelectValue placeholder="Select number of workers" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
-                    <SelectItem value="4">4</SelectItem>
-                    <SelectItem value="5">5</SelectItem>
-                    <SelectItem value="10">10+</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+  <div className="space-y-2">
+    <Label>Required Skills</Label>
+    <div className="flex flex-wrap gap-2 border rounded-md p-2 min-h-20">
+      {skills.map((skill) => (
+        <Badge key={skill} variant="secondary" className="flex items-center gap-1">
+          {skill}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-4 w-4 rounded-full"
+            onClick={() => handleRemoveSkill(skill)}
+            type="button"
+          >
+            <X className="h-3 w-3" />
+            <span className="sr-only">Remove {skill}</span>
+          </Button>
+        </Badge>
+      ))}
+      {skills.length === 0 && (
+        <p className="text-sm text-muted-foreground p-2">Add skills required for this job</p>
+      )}
+    </div>
+  </div>
 
-            <Separator />
+  <div className="flex gap-2">
+    <div className="flex-1">
+      <Input
+        placeholder="Add a required skill"
+        value={newSkill}
+        onChange={(e) => setNewSkill(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleAddSkill();
+          }
+        }}
+      />
+    </div>
+    <Button type="button" onClick={handleAddSkill} variant="secondary">
+      <PlusCircle className="h-4 w-4 mr-2" />
+      Add
+    </Button>
+  </div>
 
-            <div className="space-y-2">
-              <Label>Required Skills</Label>
-              <div className="flex flex-wrap gap-2 border rounded-md p-2 min-h-20">
-                {skills.map((skill) => (
-                  <Badge
-                    key={skill}
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    {skill}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-4 w-4 rounded-full"
-                      onClick={() => handleRemoveSkill(skill)}
-                      type="button"
-                    >
-                      <X className="h-3 w-3" />
-                      <span className="sr-only">Remove {skill}</span>
-                    </Button>
-                  </Badge>
-                ))}
-                {skills.length === 0 && (
-                  <p className="text-sm text-muted-foreground p-2">
-                    Add skills required for this job
-                  </p>
-                )}
-              </div>
-            </div>
+  <div className="space-y-2">
+    <Label htmlFor="requirements">Additional Requirements</Label>
+    <Textarea
+      id="requirements"
+      name="AdditionalRequirements"
+      placeholder="Any additional requirements or qualifications"
+      onChange={handleChange}
+      value={formData.AdditionalRequirements}
+      className="min-h-20"
+    />
+  </div>
+</CardContent>
 
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Input
-                  placeholder="Add a required skill"
-                  value={newSkill}
-                  onChange={(e) => setNewSkill(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddSkill();
-                    }
-                  }}
-                />
-              </div>
-              <Button
-                type="button"
-                onClick={handleAddSkill}
-                variant="secondary"
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Add
-              </Button>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="requirements">Additional Requirements</Label>
-              <Textarea
-                id="requirements"
-                name="additionalRequirements"
-                placeholder="Any additional requirements or qualifications"
-                onChange={handleChange}
-                value={formData.additionalRequirements}
-                className="min-h-20"
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={() => router.push("/employer/dashboard")}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Posting Job..." : "Post Job"}
-            </Button>
-          </CardFooter>
+<CardFooter className="flex justify-between">
+  <Button variant="outline" type="button" onClick={() => router.push("/employer/dashboard")}>
+    Cancel
+  </Button>
+  <Button type="submit" disabled={submitting}>
+    {submitting ? "Posting Job..." : "Post Job"}
+  </Button>
+</CardFooter>
         </form>
       </Card>
     </EmployerLayout>

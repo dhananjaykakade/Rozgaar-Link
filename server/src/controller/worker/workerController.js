@@ -26,11 +26,26 @@ export const generateSignedUrl = (publicId) => {
  */
 
 export const getWorkers = apiHandler(async (req, res) => {
-    // 🔹 Fetch all workers from the database
-    const workers = await prisma.worker.findMany();
-    
-    // 🔹 Return success response
-    return ResponseHandler.success(res, 200, "Workers retrieved successfully", workers);
+  const workers = await prisma.worker.findMany();
+
+  // 🔹 Fetch ratings for all workers
+  const workerRatings = await prisma.rating.groupBy({
+      by: ["ReceivedBy"],
+      _avg: { Rating: true },
+  });
+
+  // 🔹 Map ratings to workers
+  const workersWithAvgRating = workers.map(worker => {
+      const ratingData = workerRatings.find(r => r.ReceivedBy === worker.Id);
+      const averageRating = ratingData?._avg?.Rating || 0;
+      
+      return {
+          ...worker,
+          Rating: parseFloat(averageRating.toFixed(2)), // ✅ Round to 2 decimal places
+      };
+  });
+
+  return ResponseHandler.success(res, 200, "Workers retrieved successfully", workersWithAvgRating);
   });
 
 

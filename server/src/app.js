@@ -9,6 +9,8 @@ import cookieParser from "cookie-parser";
 import ResponseHandler from "./utils/CustomResponse.js";
 import WorkerRoute from "./routes/worker.route.js";
 import EmployerRoute from "./routes/employer.route.js";
+import JobRoute from "./routes/job.route.js";
+import ratingRoute from "./routes/rating.route.js";
 
 
 const app = express();
@@ -48,6 +50,8 @@ app.get("/", (_, res) => ResponseHandler.forbidden(res));
 app.use("/api", routes);
 app.use("/api", WorkerRoute);
 app.use("/api", EmployerRoute);
+app.use("/api", JobRoute);
+app.use("/api", ratingRoute);
 
 
 app.use((req, res, next) => {

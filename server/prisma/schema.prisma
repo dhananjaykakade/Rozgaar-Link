@@ -54,7 +54,7 @@ model Worker {
 model Employer {
   Id                String   @id @default(auto()) @map("_id") @db.ObjectId
   Name              String
-  Phone             String   @unique
+  Number             String   @unique
   CompanyName       String?
   ContactPerson     String
   Email             String?

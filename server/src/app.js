@@ -8,6 +8,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import ResponseHandler from "./utils/CustomResponse.js";
 import WorkerRoute from "./routes/worker.route.js";
+import EmployerRoute from "./routes/employer.route.js";
 
 
 const app = express();
@@ -45,7 +46,8 @@ express.urlencoded({ extended: true })
 // Default forbidden route
 app.get("/", (_, res) => ResponseHandler.forbidden(res));
 app.use("/api", routes);
-app.use("/api/worker", WorkerRoute);
+app.use("/api", WorkerRoute);
+app.use("/api", EmployerRoute);
 
 
 app.use((req, res, next) => {

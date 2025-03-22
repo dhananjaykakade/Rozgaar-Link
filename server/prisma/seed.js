@@ -10,11 +10,11 @@ async function seed() {
     // Create Employers
     const employers = await prisma.employer.createMany({
       data: [
-        { Name: "John Constructions", Phone: "1234567890", ContactPerson: "John Doe", Address: "NY, USA", City: "New York", Pin: "10001", DescriptionOfWork: "Construction projects" },
-        { Name: "Tech Solutions", Phone: "9876543210", ContactPerson: "Jane Smith", Address: "LA, USA", City: "Los Angeles", Pin: "90001", DescriptionOfWork: "Software Development" },
-        { Name: "Green Landscaping", Phone: "4561237890", ContactPerson: "Mike Green", Address: "TX, USA", City: "Houston", Pin: "77001", DescriptionOfWork: "Landscaping and Gardening" },
-        { Name: "AutoFix Repairs", Phone: "7418529630", ContactPerson: "Sarah Connor", Address: "FL, USA", City: "Miami", Pin: "33101", DescriptionOfWork: "Car Repairs" },
-        { Name: "BluePrint Architects", Phone: "3692581470", ContactPerson: "Robert Langdon", Address: "IL, USA", City: "Chicago", Pin: "60601", DescriptionOfWork: "Architectural Planning" },
+        { Name: "John Constructions", Phone: "34234234234", ContactPerson: "John Doe", Address: "NY, USA", City: "New York", Pin: "10001", DescriptionOfWork: "Construction projects" },
+        { Name: "Tech Solutions", Phone: "2342342342", ContactPerson: "Jane Smith", Address: "LA, USA", City: "Los Angeles", Pin: "90001", DescriptionOfWork: "Software Development" },
+        { Name: "Green Landscaping", Phone: "23423454", ContactPerson: "Mike Green", Address: "TX, USA", City: "Houston", Pin: "77001", DescriptionOfWork: "Landscaping and Gardening" },
+        { Name: "AutoFix Repairs", Phone: "74184530", ContactPerson: "Sarah Connor", Address: "FL, USA", City: "Miami", Pin: "33101", DescriptionOfWork: "Car Repairs" },
+        { Name: "BluePrint Architects", Phone: "3453453453", ContactPerson: "Robert Langdon", Address: "IL, USA", City: "Chicago", Pin: "60601", DescriptionOfWork: "Architectural Planning" },
       ],
     });
     
@@ -23,11 +23,11 @@ async function seed() {
     // Create Workers
     const workers = await prisma.worker.createMany({
       data: [
-        { FirstName: "Alex", LastName: "Brown", Address: "TX, USA", City: "Houston", Pin: "77001", Availability: "IMMEDIATE", Skills: ["Plumbing", "Carpentry"] },
-        { FirstName: "Maria", LastName: "Lopez", Address: "FL, USA", City: "Miami", Pin: "33101", Availability: "WITHIN_ONE_WEEK", Skills: ["Electrician"] },
-        { FirstName: "David", LastName: "Wilson", Address: "IL, USA", City: "Chicago", Pin: "60601", Availability: "WITHIN_TWO_WEEKS", Skills: ["Landscaping"] },
-        { FirstName: "Sophia", LastName: "Miller", Address: "CA, USA", City: "San Francisco", Pin: "94101", Availability: "WITHIN_A_MONTH", Skills: ["Masonry"] },
-        { FirstName: "James", LastName: "Anderson", Address: "NY, USA", City: "New York", Pin: "10001", Availability: "IMMEDIATE", Skills: ["Painting", "Tiling"] },
+        { FirstName: "Alex", LastName: "Brown", Address: "TX, USA", City: "Houston", Pin: "77001", Availability: "IMMEDIATE", Skills: ["Plumbing", "Carpentry"],Number: "23423423423" },
+        { FirstName: "Maria", LastName: "Lopez", Address: "FL, USA", City: "Miami", Pin: "33101", Availability: "WITHIN_ONE_WEEK", Skills: ["Electrician"],Number: "3423423234" },
+        { FirstName: "David", LastName: "Wilson", Address: "IL, USA", City: "Chicago", Pin: "60601", Availability: "WITHIN_TWO_WEEKS", Skills: ["Landscaping"],Number: "4534534534" },
+        { FirstName: "Sophia", LastName: "Miller", Address: "CA, USA", City: "San Francisco", Pin: "94101", Availability: "WITHIN_A_MONTH", Skills: ["Masonry"] ,Number: "453453453"},
+        { FirstName: "James", LastName: "Anderson", Address: "NY, USA", City: "New York", Pin: "10001", Availability: "IMMEDIATE", Skills: ["Painting", "Tiling"],Number: "345345345" },
       ],
     });
     

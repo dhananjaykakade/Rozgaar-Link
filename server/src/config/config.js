@@ -19,6 +19,14 @@ class Config {
     // Other Configs
     this.REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
     this.API_KEY = process.env.API_KEY || "your-api-key";
+
+
+  // Cloudinary Config
+
+  this.CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME 
+  this.CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY
+  this.CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET
+  
   }
 
   // Method to check if app is in production mode

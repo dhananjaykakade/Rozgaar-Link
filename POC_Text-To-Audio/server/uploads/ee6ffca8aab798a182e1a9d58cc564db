@@ -1,0 +1,183 @@
+# Circular Linked List
+# Methods:
+#     print
+#     insert
+#     delete
+#     count
+#     min
+#     max
+#     search
+
+class Node:
+    """Class to represent a node in the circular linked list"""
+    
+    def __init__(self, data):
+        self.data = data
+        self.next = None  # Pointer to the next node
+
+
+class CircularLinkedList:
+    """Class to represent the circular linked list"""
+    
+    def __init__(self):
+        self.head = None
+
+    def add(self, data):
+        """Add a new node with the given data to the end of the list"""
+        
+        new_node = Node(data)
+        if self.head is None:
+            # If the list is empty, point the new node to itself
+            self.head = new_node
+            new_node.next = new_node
+            return
+        
+        # Traverse to the last node
+        last = self.head
+        while last.next != self.head:
+            last = last.next
+        # Link the last node to the new node and make the list circular
+        last.next = new_node
+        new_node.next = self.head
+
+    def printing(self):
+        """Print the elements of the list"""
+        
+        if self.head is None:
+            print("The list is empty.")
+            return
+        
+        temp = self.head
+        while True:
+            # Print each node's data
+            print(temp.data, end=" -> ")
+            temp = temp.next
+            if temp == self.head:
+                break
+        print("(back to head)")
+
+    def delete(self):
+        """Delete the first node from the list and return its value"""
+        
+        if self.head is None:
+            print("List is empty, nothing to delete!")
+            return None
+        
+        if self.head.next == self.head:
+            # If the list has only one node
+            popped_value = self.head.data
+            self.head = None
+            return popped_value
+        
+        # Otherwise, traverse to the last node
+        last = self.head
+        while last.next != self.head:
+            last = last.next
+        popped_value = self.head.data
+        # Update head to the next node and make the list circular
+        self.head = self.head.next
+        last.next = self.head
+        return popped_value
+
+    def count(self):
+        """Return the count of nodes in the list"""
+        
+        if self.head is None:
+            return 0
+        
+        count = 1
+        current = self.head.next
+        while current != self.head:
+            count += 1
+            current = current.next
+        return count
+
+    def search(self, key):
+        """Search for a node with the given value"""
+        
+        if self.head is None:
+            return False
+        
+        current = self.head
+        while True:
+            if current.data == key:
+                return True
+            current = current.next
+            if current == self.head:
+                break
+        return False
+
+    def find_min(self):
+        """Find and return the minimum value in the list"""
+        
+        if self.head is None:
+            print("List is empty, no minimum value.")
+            return None
+        
+        min_value = self.head.data
+        current = self.head.next
+        while current != self.head:
+            if current.data < min_value:
+                min_value = current.data
+            current = current.next
+        
+        return min_value
+
+    def find_max(self):
+        """Find and return the maximum value in the list"""
+        
+        if self.head is None:
+            print("List is empty, no maximum value.")
+            return None
+        
+        max_value = self.head.data
+        current = self.head.next
+        while current != self.head:
+            if current.data > max_value:
+                max_value = current.data
+            current = current.next
+        
+        return max_value
+
+
+# Example usage:
+if __name__ == "__main__":
+    # Create an instance of CircularLinkedList
+    cll = CircularLinkedList()
+
+    # Add elements to the list
+    cll.add(10)
+    cll.add(20)
+    cll.add(5)
+    cll.add(40)
+
+    # Print the list
+    print("Circular Linked List:")
+    cll.printing()
+
+    # Count elements in the list
+    print("\nCount of nodes:", cll.count())
+
+    # Search for elements
+    search_value = 20
+    print(f"\nSearching for {search_value}: {'Found' if cll.search(search_value) else 'Not Found'}")
+
+    search_value = 50
+    print(f"Searching for {search_value}: {'Found' if cll.search(search_value) else 'Not Found'}")
+
+    # Find the minimum value
+    print(f"\nMinimum value in the list: {cll.find_min()}")
+
+    # Find the maximum value
+    print(f"Maximum value in the list: {cll.find_max()}")
+
+    # Delete the first element
+    popped_value = cll.delete()
+    print(f"\nDeleted value: {popped_value}")
+
+    # Print the list after deletion
+    print("\nCircular Linked List after deletion:")
+    cll.printing()
+
+    # Count elements after deletion
+    print("\nCount of nodes after deletion:", cll.count())

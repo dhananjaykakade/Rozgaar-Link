@@ -1,22 +1,45 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { WorkerLayout } from "@/components/worker-layout"
-import { useLanguage } from "@/context/language-context"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/hooks/use-toast"
-import { useState } from "react"
-import { PlusCircle, X, Camera, MapPin, Phone, Calendar, Star, Briefcase, Edit } from "lucide-react"
+import { WorkerLayout } from "@/components/worker-layout";
+import { useLanguage } from "@/context/language-context";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import {
+  PlusCircle,
+  X,
+  Camera,
+  MapPin,
+  Phone,
+  Calendar,
+  Star,
+  Briefcase,
+  Edit,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,8 +47,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Progress } from "@/components/ui/progress"
+} from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 
 // Mock worker data
 const WORKER = {
@@ -111,15 +134,15 @@ const WORKER = {
       date: "December 10, 2024",
     },
   ],
-}
+};
 
 export default function ProfilePage() {
-  const { t } = useLanguage()
-  const { toast } = useToast()
-  const [saving, setSaving] = useState(false)
-  const [skills, setSkills] = useState<string[]>(WORKER.skills)
-  const [newSkill, setNewSkill] = useState("")
-  const [editMode, setEditMode] = useState(false)
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const [skills, setSkills] = useState<string[]>(WORKER.skills);
+  const [newSkill, setNewSkill] = useState("");
+  const [editMode, setEditMode] = useState(false);
   const [profileData, setProfileData] = useState({
     firstName: WORKER.firstName,
     lastName: WORKER.lastName,
@@ -129,70 +152,75 @@ export default function ProfilePage() {
     availability: WORKER.availability,
     experience: WORKER.experience,
     education: WORKER.education,
-  })
-  const [showRatingDetails, setShowRatingDetails] = useState(false)
-  const [selectedRating, setSelectedRating] = useState<(typeof WORKER.ratings)[0] | null>(null)
+  });
+  const [showRatingDetails, setShowRatingDetails] = useState(false);
+  const [selectedRating, setSelectedRating] = useState<
+    (typeof WORKER.ratings)[0] | null
+  >(null);
 
   const handleAddSkill = () => {
     if (newSkill && !skills.includes(newSkill)) {
-      setSkills([...skills, newSkill])
-      setNewSkill("")
+      setSkills([...skills, newSkill]);
+      setNewSkill("");
     }
-  }
+  };
 
   const handleRemoveSkill = (skill: string) => {
-    setSkills(skills.filter((s) => s !== skill))
-  }
+    setSkills(skills.filter((s) => s !== skill));
+  };
 
   const handleSaveProfile = () => {
-    setSaving(true)
+    setSaving(true);
 
     // Simulate API call
     setTimeout(() => {
-      setSaving(false)
-      setEditMode(false)
+      setSaving(false);
+      setEditMode(false);
       toast({
         title: "Profile Updated",
         description: "Your profile has been updated successfully",
-      })
-    }, 1500)
-  }
+      });
+    }, 1500);
+  };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
     setProfileData({
       ...profileData,
       [id]: value,
-    })
-  }
+    });
+  };
 
   const handleSelectChange = (value: string) => {
     setProfileData({
       ...profileData,
       availability: value,
-    })
-  }
+    });
+  };
 
   const viewRatingDetails = (rating: (typeof WORKER.ratings)[0]) => {
-    setSelectedRating(rating)
-    setShowRatingDetails(true)
-  }
+    setSelectedRating(rating);
+    setShowRatingDetails(true);
+  };
 
   // Calculate profile completion percentage
   const calculateProfileCompletion = () => {
-    let completed = 0
-    const total = 5 // Total number of sections to complete
+    let completed = 0;
+    const total = 5; // Total number of sections to complete
 
-    if (profileData.firstName && profileData.lastName) completed++
-    if (profileData.address && profileData.city && profileData.pincode) completed++
-    if (skills.length > 0) completed++
-    if (profileData.experience) completed++
-    if (WORKER.verificationStatus.idProof === "verified") completed++
+    if (profileData.firstName && profileData.lastName) completed++;
+    if (profileData.address && profileData.city && profileData.pincode)
+      completed++;
+    if (skills.length > 0) completed++;
+    if (profileData.experience) completed++;
+    if (WORKER.verificationStatus.idProof === "verified") completed++;
 
-    return (completed / total) * 100
-  }
+    return (completed / total) * 100;
+  };
 
-  const profileCompletionPercentage = calculateProfileCompletion()
+  const profileCompletionPercentage = calculateProfileCompletion();
 
   // Render star rating
   const renderStars = (rating: number) => {
@@ -201,12 +229,16 @@ export default function ProfilePage() {
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`h-4 w-4 ${star <= rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}`}
+            className={`h-4 w-4 ${
+              star <= rating
+                ? "text-yellow-500 fill-yellow-500"
+                : "text-gray-300"
+            }`}
           />
         ))}
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <WorkerLayout>
@@ -215,7 +247,9 @@ export default function ProfilePage() {
           <div className="flex justify-between items-center">
             <div className="space-y-2">
               <h1 className="text-2xl font-bold">{t("profile.title")}</h1>
-              <p className="text-muted-foreground">{t("profile.update_profile")}</p>
+              <p className="text-muted-foreground">
+                {t("profile.update_profile")}
+              </p>
             </div>
             <Button
               onClick={() => setEditMode(!editMode)}
@@ -235,7 +269,9 @@ export default function ProfilePage() {
                   <div className="flex flex-col items-center">
                     <div className="relative mb-4">
                       <Avatar className="h-24 w-24">
-                        <AvatarFallback className="text-xl">{WORKER.name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="text-xl">
+                          {WORKER.name.charAt(0)}
+                        </AvatarFallback>
                       </Avatar>
                       <Button
                         size="icon"
@@ -250,9 +286,13 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-1 mt-1">
                       <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                       <span className="font-medium">{WORKER.rating}</span>
-                      <span className="text-muted-foreground">({WORKER.reviews} reviews)</span>
+                      <span className="text-muted-foreground">
+                        ({WORKER.reviews} reviews)
+                      </span>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">Member since {WORKER.memberSince}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Member since {WORKER.memberSince}
+                    </p>
 
                     <div className="mt-4 w-full space-y-2">
                       <div className="flex items-center gap-2 text-sm">
@@ -266,7 +306,10 @@ export default function ProfilePage() {
                       <div className="flex items-center gap-2 text-sm">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span>
-                          Available: {WORKER.availability === "immediate" ? "Immediately" : WORKER.availability}
+                          Available:{" "}
+                          {WORKER.availability === "immediate"
+                            ? "Immediately"
+                            : WORKER.availability}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
@@ -287,9 +330,14 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Profile completion</span>
-                        <span className="font-medium">{Math.round(profileCompletionPercentage)}%</span>
+                        <span className="font-medium">
+                          {Math.round(profileCompletionPercentage)}%
+                        </span>
                       </div>
-                      <Progress value={profileCompletionPercentage} className="h-2" />
+                      <Progress
+                        value={profileCompletionPercentage}
+                        className="h-2"
+                      />
                     </div>
 
                     <ul className="space-y-2 text-sm">
@@ -314,7 +362,11 @@ export default function ProfilePage() {
                       <li className="flex items-center gap-2">
                         <Badge
                           variant="outline"
-                          className={`h-5 w-5 rounded-full p-0 flex items-center justify-center ${profileData.experience ? "bg-green-50 text-green-700 border-green-200" : ""}`}
+                          className={`h-5 w-5 rounded-full p-0 flex items-center justify-center ${
+                            profileData.experience
+                              ? "bg-green-50 text-green-700 border-green-200"
+                              : ""
+                          }`}
                         >
                           {profileData.experience ? "✓" : "!"}
                         </Badge>
@@ -323,9 +375,15 @@ export default function ProfilePage() {
                       <li className="flex items-center gap-2">
                         <Badge
                           variant="outline"
-                          className={`h-5 w-5 rounded-full p-0 flex items-center justify-center ${WORKER.verificationStatus.idProof === "verified" ? "bg-green-50 text-green-700 border-green-200" : ""}`}
+                          className={`h-5 w-5 rounded-full p-0 flex items-center justify-center ${
+                            WORKER.verificationStatus.idProof === "verified"
+                              ? "bg-green-50 text-green-700 border-green-200"
+                              : ""
+                          }`}
                         >
-                          {WORKER.verificationStatus.idProof === "verified" ? "✓" : "!"}
+                          {WORKER.verificationStatus.idProof === "verified"
+                            ? "✓"
+                            : "!"}
                         </Badge>
                         <span>Upload ID proof</span>
                       </li>
@@ -339,9 +397,13 @@ export default function ProfilePage() {
             <div className="md:col-span-2">
               <Tabs defaultValue="personal">
                 <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="personal">{t("profile.personal_info")}</TabsTrigger>
-                  <TabsTrigger value="skills">{t("profile.skills")}</TabsTrigger>
-                  <TabsTrigger value="jobs">Past Jobs</TabsTrigger>
+                  <TabsTrigger value="personal">
+                    {t("profile.personal_info")}
+                  </TabsTrigger>
+                  <TabsTrigger value="skills">
+                    {t("profile.skills")}
+                  </TabsTrigger>
+                  <TabsTrigger value="documents">Documents</TabsTrigger>
                   <TabsTrigger value="ratings">Ratings</TabsTrigger>
                 </TabsList>
 
@@ -349,12 +411,16 @@ export default function ProfilePage() {
                   <Card>
                     <CardHeader>
                       <CardTitle>{t("profile.personal_info")}</CardTitle>
-                      <CardDescription>Update your personal details</CardDescription>
+                      <CardDescription>
+                        Update your personal details
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="firstName">{t("profile.first_name")}</Label>
+                          <Label htmlFor="firstName">
+                            {t("profile.first_name")}
+                          </Label>
                           <Input
                             id="firstName"
                             value={profileData.firstName}
@@ -363,7 +429,9 @@ export default function ProfilePage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="lastName">{t("profile.last_name")}</Label>
+                          <Label htmlFor="lastName">
+                            {t("profile.last_name")}
+                          </Label>
                           <Input
                             id="lastName"
                             value={profileData.lastName}
@@ -376,7 +444,9 @@ export default function ProfilePage() {
                       <div className="space-y-2">
                         <Label htmlFor="phone">{t("auth.phone")}</Label>
                         <Input id="phone" value={WORKER.phone} disabled />
-                        <p className="text-xs text-muted-foreground">Phone number cannot be changed</p>
+                        <p className="text-xs text-muted-foreground">
+                          Phone number cannot be changed
+                        </p>
                       </div>
 
                       <div className="space-y-2">
@@ -392,10 +462,17 @@ export default function ProfilePage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="city">{t("profile.city")}</Label>
-                          <Input id="city" value={profileData.city} onChange={handleInputChange} disabled={!editMode} />
+                          <Input
+                            id="city"
+                            value={profileData.city}
+                            onChange={handleInputChange}
+                            disabled={!editMode}
+                          />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="pincode">{t("profile.pincode")}</Label>
+                          <Label htmlFor="pincode">
+                            {t("profile.pincode")}
+                          </Label>
                           <Input
                             id="pincode"
                             value={profileData.pincode}
@@ -406,7 +483,9 @@ export default function ProfilePage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="availability">{t("profile.availability")}</Label>
+                        <Label htmlFor="availability">
+                          {t("profile.availability")}
+                        </Label>
                         <Select
                           value={profileData.availability}
                           onValueChange={handleSelectChange}
@@ -418,8 +497,12 @@ export default function ProfilePage() {
                           <SelectContent>
                             <SelectItem value="immediate">Immediate</SelectItem>
                             <SelectItem value="1week">Within 1 week</SelectItem>
-                            <SelectItem value="2weeks">Within 2 weeks</SelectItem>
-                            <SelectItem value="1month">Within 1 month</SelectItem>
+                            <SelectItem value="2weeks">
+                              Within 2 weeks
+                            </SelectItem>
+                            <SelectItem value="1month">
+                              Within 1 month
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -427,7 +510,9 @@ export default function ProfilePage() {
                     {editMode && (
                       <CardFooter>
                         <Button onClick={handleSaveProfile} disabled={saving}>
-                          {saving ? t("profile.saving") : t("profile.save_changes")}
+                          {saving
+                            ? t("profile.saving")
+                            : t("profile.save_changes")}
                         </Button>
                       </CardFooter>
                     )}
@@ -438,14 +523,20 @@ export default function ProfilePage() {
                   <Card>
                     <CardHeader>
                       <CardTitle>{t("profile.skills")}</CardTitle>
-                      <CardDescription>Add your skills to get matched with relevant jobs</CardDescription>
+                      <CardDescription>
+                        Add your skills to get matched with relevant jobs
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
                         <Label>{t("profile.your_skills")}</Label>
                         <div className="flex flex-wrap gap-2 border rounded-md p-2 min-h-20">
                           {skills.map((skill) => (
-                            <Badge key={skill} variant="secondary" className="flex items-center gap-1">
+                            <Badge
+                              key={skill}
+                              variant="secondary"
+                              className="flex items-center gap-1"
+                            >
                               {skill}
                               {editMode && (
                                 <Button
@@ -455,13 +546,17 @@ export default function ProfilePage() {
                                   onClick={() => handleRemoveSkill(skill)}
                                 >
                                   <X className="h-3 w-3" />
-                                  <span className="sr-only">Remove {skill}</span>
+                                  <span className="sr-only">
+                                    Remove {skill}
+                                  </span>
                                 </Button>
                               )}
                             </Badge>
                           ))}
                           {skills.length === 0 && (
-                            <p className="text-sm text-muted-foreground p-2">Add skills to improve job matching</p>
+                            <p className="text-sm text-muted-foreground p-2">
+                              Add skills to improve job matching
+                            </p>
                           )}
                         </div>
                       </div>
@@ -475,13 +570,17 @@ export default function ProfilePage() {
                               onChange={(e) => setNewSkill(e.target.value)}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
-                                  e.preventDefault()
-                                  handleAddSkill()
+                                  e.preventDefault();
+                                  handleAddSkill();
                                 }
                               }}
                             />
                           </div>
-                          <Button type="button" onClick={handleAddSkill} variant="secondary">
+                          <Button
+                            type="button"
+                            onClick={handleAddSkill}
+                            variant="secondary"
+                          >
                             <PlusCircle className="h-4 w-4 mr-2" />
                             Add
                           </Button>
@@ -491,7 +590,9 @@ export default function ProfilePage() {
                       <Separator />
 
                       <div className="space-y-2">
-                        <Label htmlFor="experience">{t("profile.work_experience")}</Label>
+                        <Label htmlFor="experience">
+                          {t("profile.work_experience")}
+                        </Label>
                         <Textarea
                           id="experience"
                           placeholder="Describe your previous work experience"
@@ -503,7 +604,9 @@ export default function ProfilePage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="education">{t("profile.education")}</Label>
+                        <Label htmlFor="education">
+                          {t("profile.education")}
+                        </Label>
                         <Textarea
                           id="education"
                           placeholder="List any relevant education or training"
@@ -517,56 +620,84 @@ export default function ProfilePage() {
                     {editMode && (
                       <CardFooter>
                         <Button onClick={handleSaveProfile} disabled={saving}>
-                          {saving ? t("profile.saving") : t("profile.save_changes")}
+                          {saving
+                            ? t("profile.saving")
+                            : t("profile.save_changes")}
                         </Button>
                       </CardFooter>
                     )}
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="jobs" className="mt-4">
+                <TabsContent value="documents" className="mt-4">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Past Jobs</CardTitle>
-                      <CardDescription>Your job history and completed work</CardDescription>
+                      <CardTitle>Documents & Verification</CardTitle>
+                      <CardDescription>
+                        Upload your documents for verification
+                      </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      {WORKER.pastJobs.length > 0 ? (
-                        <div className="space-y-4">
-                          {WORKER.pastJobs.map((job) => (
-                            <div key={job.id} className="border rounded-lg p-4">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h3 className="font-medium">{job.title}</h3>
-                                  <p className="text-sm text-muted-foreground">
-                                    {job.employer} • {job.location}
-                                  </p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-sm font-medium">{job.wage}</p>
-                                  <p className="text-xs text-muted-foreground">{job.duration}</p>
-                                </div>
-                              </div>
-
-                              <div className="mt-3 flex justify-between items-center">
-                                <div className="flex items-center gap-1">{renderStars(job.rating)}</div>
-                                <p className="text-xs text-muted-foreground">Completed on {job.completedOn}</p>
-                              </div>
-
-                              {job.feedback && (
-                                <div className="mt-2 text-sm">
-                                  <p className="italic">"{job.feedback}"</p>
-                                </div>
-                              )}
-                            </div>
-                          ))}
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>ID Proof</Label>
+                        <div className="border rounded-md p-4 text-center">
+                          <div className="flex flex-col items-center justify-center py-4">
+                            <Camera className="h-8 w-8 text-muted-foreground mb-2" />
+                            <p className="text-sm font-medium">
+                              Upload ID Proof
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Aadhaar Card, PAN Card, Voter ID, etc.
+                            </p>
+                            <Button variant="outline" className="mt-4">
+                              Upload Document
+                            </Button>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <p className="text-muted-foreground">No past jobs found</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Address Proof</Label>
+                        <div className="border rounded-md p-4 text-center">
+                          <div className="flex flex-col items-center justify-center py-4">
+                            <Camera className="h-8 w-8 text-muted-foreground mb-2" />
+                            <p className="text-sm font-medium">
+                              Upload Address Proof
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Utility Bill, Rent Agreement, etc.
+                            </p>
+                            <Button variant="outline" className="mt-4">
+                              Upload Document
+                            </Button>
+                          </div>
                         </div>
-                      )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Skill Certificates (Optional)</Label>
+                        <div className="border rounded-md p-4 text-center">
+                          <div className="flex flex-col items-center justify-center py-4">
+                            <Camera className="h-8 w-8 text-muted-foreground mb-2" />
+                            <p className="text-sm font-medium">
+                              Upload Certificates
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Training certificates, course completion, etc.
+                            </p>
+                            <Button variant="outline" className="mt-4">
+                              Upload Document
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
                     </CardContent>
+                    <CardFooter>
+                      <p className="text-sm text-muted-foreground">
+                        Your documents will be verified within 24-48 hours after
+                        submission
+                      </p>
+                    </CardFooter>
                   </Card>
                 </TabsContent>
 
@@ -576,12 +707,20 @@ export default function ProfilePage() {
                       <div className="flex justify-between items-center">
                         <div>
                           <CardTitle>Ratings & Reviews</CardTitle>
-                          <CardDescription>Feedback from employers</CardDescription>
+                          <CardDescription>
+                            Feedback from employers
+                          </CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="text-2xl font-bold">{WORKER.rating}</div>
-                          <div className="flex">{renderStars(WORKER.rating)}</div>
-                          <div className="text-sm text-muted-foreground">({WORKER.reviews})</div>
+                          <div className="text-2xl font-bold">
+                            {WORKER.rating}
+                          </div>
+                          <div className="flex">
+                            {renderStars(WORKER.rating)}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            ({WORKER.reviews})
+                          </div>
                         </div>
                       </div>
                     </CardHeader>
@@ -589,17 +728,28 @@ export default function ProfilePage() {
                       {WORKER.ratings.length > 0 ? (
                         <div className="space-y-4">
                           {WORKER.ratings.map((rating) => (
-                            <div key={rating.id} className="border rounded-lg p-4">
+                            <div
+                              key={rating.id}
+                              className="border rounded-lg p-4"
+                            >
                               <div className="flex justify-between items-start">
                                 <div>
-                                  <h3 className="font-medium">{rating.employer}</h3>
-                                  <div className="flex items-center gap-1 mt-1">{renderStars(rating.rating)}</div>
+                                  <h3 className="font-medium">
+                                    {rating.employer}
+                                  </h3>
+                                  <div className="flex items-center gap-1 mt-1">
+                                    {renderStars(rating.rating)}
+                                  </div>
                                 </div>
-                                <p className="text-sm text-muted-foreground">{rating.date}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {rating.date}
+                                </p>
                               </div>
 
                               <div className="mt-2">
-                                <p className="text-sm italic">"{rating.feedback}"</p>
+                                <p className="text-sm italic">
+                                  "{rating.feedback}"
+                                </p>
                               </div>
 
                               <Button
@@ -614,7 +764,9 @@ export default function ProfilePage() {
                         </div>
                       ) : (
                         <div className="text-center py-8">
-                          <p className="text-muted-foreground">No ratings yet</p>
+                          <p className="text-muted-foreground">
+                            No ratings yet
+                          </p>
                         </div>
                       )}
                     </CardContent>
@@ -631,18 +783,26 @@ export default function ProfilePage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Rating Details</DialogTitle>
-            <DialogDescription>Detailed feedback from employer</DialogDescription>
+            <DialogDescription>
+              Detailed feedback from employer
+            </DialogDescription>
           </DialogHeader>
 
           {selectedRating && (
             <div className="space-y-4 mt-2">
               <div>
-                <h3 className="font-medium text-lg">{selectedRating.employer}</h3>
-                <p className="text-sm text-muted-foreground">{selectedRating.date}</p>
+                <h3 className="font-medium text-lg">
+                  {selectedRating.employer}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {selectedRating.date}
+                </p>
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="text-xl font-bold">{selectedRating.rating}/5</div>
+                <div className="text-xl font-bold">
+                  {selectedRating.rating}/5
+                </div>
                 <div className="flex">{renderStars(selectedRating.rating)}</div>
               </div>
 
@@ -659,6 +819,5 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
     </WorkerLayout>
-  )
+  );
 }
-

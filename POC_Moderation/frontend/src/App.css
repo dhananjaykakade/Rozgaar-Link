@@ -1,0 +1,96 @@
+/* Global Styles */
+body {
+  font-family: "Arial", sans-serif;
+  background: #f4f4f4;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+/* Main Container */
+.container {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  text-align: center;
+}
+
+/* Heading */
+h1 {
+  font-size: 22px;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+/* Input Box */
+.input-box {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  resize: none;
+}
+
+/* Button */
+.btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: #0056b3;
+}
+
+.btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Result Box */
+.result-box {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 5px;
+  text-align: left;
+}
+
+.result-content {
+  font-size: 14px;
+  color: #444;
+}
+
+/* Flagged and Safe Categories */
+ul {
+  padding: 0;
+  list-style-type: none;
+}
+
+li {
+  padding: 5px;
+  font-size: 14px;
+  border-radius: 5px;
+}
+
+.flagged {
+  background: #ffdddd;
+  color: #d9534f;
+}
+
+.safe {
+  background: #dff0d8;
+  color: #3c763d;
+}

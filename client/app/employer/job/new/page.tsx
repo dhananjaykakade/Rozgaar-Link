@@ -1,63 +1,121 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { EmployerLayout } from "@/components/employer-layout"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { useToast } from "@/hooks/use-toast"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { PlusCircle, X, Calendar, IndianRupee, Clock, MapPin } from "lucide-react"
+import { EmployerLayout } from "@/components/employer-layout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  PlusCircle,
+  X,
+  Calendar,
+  IndianRupee,
+  Clock,
+  MapPin,
+} from "lucide-react";
+
+interface JobFormData {
+  jobTitle: string;
+  jobDescription: string;
+  location: string;
+  fullAddress: string;
+  dailyWage: number;
+  duration: number;
+  workingHours: string;
+  startDate: string;
+  numberOfWorkers: string;
+
+  additionalRequirements: string;
+}
 
 export default function NewJobPage() {
-  const { toast } = useToast()
-  const router = useRouter()
-  const [submitting, setSubmitting] = useState(false)
-  const [skills, setSkills] = useState<string[]>([])
-  const [newSkill, setNewSkill] = useState("")
+  const [formData, setFormData] = useState<JobFormData>({
+    jobTitle: "",
+    jobDescription: "",
+    location: "",
+    fullAddress: "",
+    dailyWage: 0,
+    duration: 0,
+    workingHours: "",
+    startDate: "",
+    numberOfWorkers: "1",
+
+    additionalRequirements: "",
+  });
+
+  const { toast } = useToast();
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [newSkill, setNewSkill] = useState("");
 
   const handleAddSkill = () => {
     if (newSkill && !skills.includes(newSkill)) {
-      setSkills([...skills, newSkill])
-      setNewSkill("")
+      setSkills([...skills, newSkill]);
+      setNewSkill("");
     }
-  }
+  };
 
   const handleRemoveSkill = (skill: string) => {
-    setSkills(skills.filter((s) => s !== skill))
-  }
+    setSkills(skills.filter((s) => s !== skill));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
+    e.preventDefault();
+    console.log(formData);
     if (skills.length === 0) {
       toast({
         title: "Missing skills",
         description: "Please add at least one required skill",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setSubmitting(true)
+    setSubmitting(true);
 
     // Simulate API call
     setTimeout(() => {
-      setSubmitting(false)
+      setSubmitting(false);
       toast({
         title: "Job Posted",
         description: "Your job has been posted successfully",
-      })
-      router.push("/employer/dashboard")
-    }, 1500)
-  }
+      });
+      router.push("/employer/dashboard");
+    }, 1500);
+  };
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, type } = e.target;
+
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: type === "number" ? (value === "" ? "" : Number(value)) : value,
+    }));
+  };
 
   return (
     <EmployerLayout>
@@ -65,17 +123,35 @@ export default function NewJobPage() {
         <form onSubmit={handleSubmit}>
           <CardHeader>
             <CardTitle>Post a New Job</CardTitle>
-            <CardDescription>Fill in the details to post a new job</CardDescription>
+            <CardDescription>
+              Fill in the details to post a new job
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="title">Job Title</Label>
-              <Input id="title" placeholder="e.g. Construction Helper" required />
+              <Input
+                id="j"
+                name="jobTitle"
+                // type="text"
+                placeholder="e.g. Construction Helper"
+                onChange={handleChange}
+                value={formData.jobTitle}
+                required
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="description">Job Description</Label>
-              <Textarea id="description" placeholder="Describe the job in detail" className="min-h-32" required />
+              <Textarea
+                id="description"
+                name="jobDescription"
+                placeholder="Describe the job in detail"
+                onChange={handleChange}
+                value={formData.jobDescription}
+                className="min-h-32"
+                required
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -84,14 +160,29 @@ export default function NewJobPage() {
                 <div className="flex">
                   <div className="relative flex-1">
                     <MapPin className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input id="location" className="pl-8" placeholder="e.g. Andheri East, Mumbai" required />
+                    <Input
+                      id="location"
+                      name="location"
+                      className="pl-8"
+                      placeholder="e.g. Andheri East, Mumbai"
+                      onChange={handleChange}
+                      value={formData.location}
+                      required
+                    />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="address">Full Address</Label>
-                <Input id="address" placeholder="e.g. Near Metro Station, Andheri East" required />
+                <Input
+                  id="address"
+                  name="fullAddress"
+                  placeholder="e.g. Near Metro Station, Andheri East"
+                  onChange={handleChange}
+                  value={formData.fullAddress}
+                  required
+                />
               </div>
             </div>
 
@@ -101,7 +192,16 @@ export default function NewJobPage() {
                 <div className="flex">
                   <div className="relative flex-1">
                     <IndianRupee className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input id="wage" type="number" className="pl-8" placeholder="e.g. 600" required />
+                    <Input
+                      id="wage"
+                      name="dailyWage"
+                      type="number"
+                      className="pl-8"
+                      placeholder="e.g. 600"
+                      onChange={handleChange}
+                      value={formData.dailyWage}
+                      required
+                    />
                   </div>
                 </div>
               </div>
@@ -111,7 +211,16 @@ export default function NewJobPage() {
                 <div className="flex">
                   <div className="relative flex-1">
                     <Calendar className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input id="duration" type="number" className="pl-8" placeholder="e.g. 15" required />
+                    <Input
+                      id="duration"
+                      name="duration"
+                      type="number"
+                      className="pl-8"
+                      placeholder="e.g. 15"
+                      onChange={handleChange}
+                      value={formData.duration}
+                      required
+                    />
                   </div>
                 </div>
               </div>
@@ -121,7 +230,16 @@ export default function NewJobPage() {
                 <div className="flex">
                   <div className="relative flex-1">
                     <Clock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input id="workingHours" className="pl-8" placeholder="e.g. 8 AM - 5 PM" required />
+                    <Input
+                      id="workingHours"
+                      type="number"
+                      name="workingHours"
+                      className="pl-8"
+                      placeholder="e.g. 8 AM - 5 PM"
+                      onChange={handleChange}
+                      value={formData.workingHours}
+                      required
+                    />
                   </div>
                 </div>
               </div>
@@ -130,7 +248,14 @@ export default function NewJobPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="startDate">Start Date</Label>
-                <Input id="startDate" type="date" required />
+                <Input
+                  id="startDate"
+                  name="startDate"
+                  type="date"
+                  onChange={handleChange}
+                  value={formData.startDate}
+                  required
+                />
               </div>
 
               <div className="space-y-2">
@@ -157,7 +282,11 @@ export default function NewJobPage() {
               <Label>Required Skills</Label>
               <div className="flex flex-wrap gap-2 border rounded-md p-2 min-h-20">
                 {skills.map((skill) => (
-                  <Badge key={skill} variant="secondary" className="flex items-center gap-1">
+                  <Badge
+                    key={skill}
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
                     {skill}
                     <Button
                       variant="ghost"
@@ -172,7 +301,9 @@ export default function NewJobPage() {
                   </Badge>
                 ))}
                 {skills.length === 0 && (
-                  <p className="text-sm text-muted-foreground p-2">Add skills required for this job</p>
+                  <p className="text-sm text-muted-foreground p-2">
+                    Add skills required for this job
+                  </p>
                 )}
               </div>
             </div>
@@ -185,13 +316,17 @@ export default function NewJobPage() {
                   onChange={(e) => setNewSkill(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      e.preventDefault()
-                      handleAddSkill()
+                      e.preventDefault();
+                      handleAddSkill();
                     }
                   }}
                 />
               </div>
-              <Button type="button" onClick={handleAddSkill} variant="secondary">
+              <Button
+                type="button"
+                onClick={handleAddSkill}
+                variant="secondary"
+              >
                 <PlusCircle className="h-4 w-4 mr-2" />
                 Add
               </Button>
@@ -201,13 +336,20 @@ export default function NewJobPage() {
               <Label htmlFor="requirements">Additional Requirements</Label>
               <Textarea
                 id="requirements"
+                name="additionalRequirements"
                 placeholder="Any additional requirements or qualifications"
+                onChange={handleChange}
+                value={formData.additionalRequirements}
                 className="min-h-20"
               />
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button variant="outline" type="button" onClick={() => router.push("/employer/dashboard")}>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => router.push("/employer/dashboard")}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={submitting}>
@@ -217,6 +359,5 @@ export default function NewJobPage() {
         </form>
       </Card>
     </EmployerLayout>
-  )
+  );
 }
-

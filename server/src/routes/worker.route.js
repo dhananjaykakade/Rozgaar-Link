@@ -4,10 +4,10 @@ const router = express.Router();
 import upload from '../utils/multerConfig.js';
 
 // Get all workers
-router.get("/", getWorkers);
-router.get("/:id", getWorkerById);
-router.get("/", getWorkersWithQuery);
-router.post('/:id', upload.fields([
+router.get("/workers", getWorkers);
+router.get("/worker/:id", getWorkerById);
+router.get("/worker/query/or", getWorkersWithQuery);
+router.post('/worker/:id', upload.fields([
     { name: 'IdProof', maxCount: 1 },
     { name: 'AddressProof', maxCount: 1 },
     { name: 'SkillsProof', maxCount: 1 }

@@ -200,28 +200,36 @@ export const getWorkerById = apiHandler(async (req, res) => {
  * - `skill` (string): Filter workers by specific skill.
  * - `availability` (string): Filter workers by availability status.
  */
-export const getWorkersWithQuery = apiHandler(async (req, res) => {
+  export const getWorkersWithQuery = apiHandler(async (req, res) => {
+      console.log("➡️ Query Parameters:", req.query);
     const { city, skill, availability } = req.query;
-  
+
+
+    // Define filters object
     const filters = {};
-    if (city) filters.City = city;
-    if (skill) filters.Skills = { has: skill };
-    if (availability) filters.Availability = availability;
-  
-    const workers = await prisma.worker.findMany({
-      where: filters,
-      select: {
-        Id: true,
-        FirstName: true,
-        LastName: true,
-        City: true,
-        Availability: true,
-        Skills: true,
-        Rating: true,
-        CreatedAt: true,
-      },
-    });
-  
-    return ResponseHandler.success(res, 200, "Workers retrieved successfully", workers);
-  });
+    if (city) filters.City = { equals: city };  
+    if (skill) filters.Skills = { has: skill };  
+    if (availability) filters.Availability = { equals: availability };
+
+    try {
+        const workers = await prisma.worker.findMany({  // ✅ Ensure `findMany()` is used
+            where: filters,
+            select: {
+                Id: true,
+                FirstName: true,
+                LastName: true,
+                City: true,
+                Availability: true,
+                Skills: true,
+                Rating: true,
+                CreatedAt: true,
+            },
+        });
+
+        return ResponseHandler.success(res, 200, "Workers retrieved successfully", workers);
+    } catch (error) {
+        console.error("❌ Prisma Query Error:", error);
+        return ResponseHandler.serverError(res, "Error fetching workers");
+    }
+});
   

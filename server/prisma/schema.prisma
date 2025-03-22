@@ -32,12 +32,12 @@ enum NumberOfWorkers {
 
 model Worker {
   Id             String           @id @default(auto()) @map("_id") @db.ObjectId
-  FirstName      String
-  LastName       String
-  Address        String
-  City           String
-  Number         String           @unique
-  Pin            String
+  FirstName      String?
+  LastName       String?
+  Address        String?
+  City           String?
+  Number         String?           @unique
+  Pin            String?
   Availability   Availability
   Skills         String[]
   WorkExperience String?
@@ -54,16 +54,16 @@ model Worker {
 
 model Employer {
   Id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  Name              String
+  Name              String?
   Number            String   @unique
   CompanyName       String?
-  ContactPerson     String
+  ContactPerson     String?
   Email             String?
   Website           String?
-  Address           String
-  City              String
-  Pin               String
-  DescriptionOfWork String
+  Address           String?
+  City              String?
+  Pin               String?
+  DescriptionOfWork String?
   Rating            Float    @default(0.0)
   CreatedAt         DateTime @default(now())
   Job               Job[]

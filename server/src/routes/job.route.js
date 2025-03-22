@@ -1,5 +1,5 @@
 import express from "express";
-import { createJob,getAllJobs,updateJob,deleteJob,getJobsByQuery ,updateJobStatus,getJobById,applyForJob ,getJobApplicants } from "../controller/job/jobController.js";
+import { createJob,getAllJobs,updateJob,deleteJob,getJobsByQuery ,updateJobStatus,getJobById,applyForJob ,getJobApplicants,getEmployerJobApplications,getWorkerApplications ,updateApplicationStatus     } from "../controller/job/jobController.js";
 const router = express.Router();
 
 router.post("/job", createJob);
@@ -20,6 +20,10 @@ router.post("/job/:id/apply", applyForJob);
 
 router.get("/job/:id/applicants", getJobApplicants);
 
+router.get("/employer/:id/applications", getEmployerJobApplications);
 
+router.get("/worker/:id/applications", getWorkerApplications);
+
+router.put('/job/:jobId/application/:workerId', updateApplicationStatus);
 
 export default router;

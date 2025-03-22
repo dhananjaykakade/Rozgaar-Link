@@ -31,30 +31,31 @@ enum NumberOfWorkers {
 }
 
 model Worker {
-  Id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  Id             String           @id @default(auto()) @map("_id") @db.ObjectId
   FirstName      String
   LastName       String
   Address        String
   City           String
-  Number         String    @unique
+  Number         String           @unique
   Pin            String
   Availability   Availability
   Skills         String[]
   WorkExperience String?
   Education      String?
-  IsVerified     Boolean  @default(false) 
-  DocumentsId    String?      @db.ObjectId
-  Documents      Document?    @relation(fields: [DocumentsId], references: [Id])
-  Rating         Float        @default(0.0)
-  CreatedAt      DateTime     @default(now())
-  Job            Job?         @relation(fields: [jobId], references: [Id])
-  jobId          String?      @db.ObjectId
+  IsVerified     Boolean          @default(false)
+  DocumentsId    String?          @db.ObjectId
+  Documents      Document?        @relation(fields: [DocumentsId], references: [Id])
+  Rating         Float            @default(0.0)
+  CreatedAt      DateTime         @default(now())
+  Job            Job?             @relation(fields: [jobId], references: [Id])
+  jobId          String?          @db.ObjectId
+  JobApplication JobApplication[]
 }
 
 model Employer {
   Id                String   @id @default(auto()) @map("_id") @db.ObjectId
   Name              String
-  Number             String   @unique
+  Number            String   @unique
   CompanyName       String?
   ContactPerson     String
   Email             String?
@@ -69,21 +70,22 @@ model Employer {
 }
 
 model Job {
-  Id                     String          @id @default(auto()) @map("_id") @db.ObjectId
+  Id                     String           @id @default(auto()) @map("_id") @db.ObjectId
   Title                  String
   Description            String
-  Employer               Employer        @relation(fields: [EmployerId], references: [Id])
-  EmployerId             String          @db.ObjectId
+  Employer               Employer         @relation(fields: [EmployerId], references: [Id])
+  EmployerId             String           @db.ObjectId
   Location               String
   Pay                    Float
   Skills                 String[]
   Applicants             Worker[]
+  JobApplications        JobApplication[] @relation(name: "JobToApplications") // ✅ Keep this one
   WorkingHours           String
   StartDate              DateTime
   NumberOfWorkers        NumberOfWorkers
   AdditionalRequirements String?
-  Status                 JobStatus       @default(ACTIVE)
-  CreatedAt              DateTime        @default(now())
+  Status                 JobStatus        @default(ACTIVE)
+  CreatedAt              DateTime         @default(now())
 }
 
 model Rating {
@@ -103,4 +105,21 @@ model Document {
   AddressProof String? // Mandatory
   SkillsProof  String? // Optional
   Worker       Worker[]
+}
+
+
+model JobApplication {
+  Id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  Job        Job       @relation(fields: [JobId], references: [Id], name: "JobToApplications") // ✅ Add relation name
+  JobId      String    @db.ObjectId
+  Worker     Worker    @relation(fields: [WorkerId], references: [Id])
+  WorkerId   String    @db.ObjectId
+  Status     ApplicationStatus @default(PENDING)
+  AppliedAt  DateTime  @default(now())
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }

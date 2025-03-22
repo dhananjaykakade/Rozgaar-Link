@@ -168,42 +168,32 @@ export const getJobById = apiHandler(async (req, res) => {
 
 export const applyForJob = apiHandler(async (req, res) => {
     const { id } = req.params; // Job ID
-    const { WorkerId } = req.body; // Worker ID from request
+    const { WorkerId } = req.body; // Worker ID
+
+
         // 🔹 Check if job exists
         const job = await prisma.job.findUnique({ where: { Id: id } });
-        if (!job) {
-            return ResponseHandler.notFound(res, "Job not found.");
-        }
+        if (!job) return ResponseHandler.notFound(res, "Job not found.");
 
         // 🔹 Check if worker exists
         const worker = await prisma.worker.findUnique({ where: { Id: WorkerId } });
-        if (!worker) {
-            return ResponseHandler.notFound(res, "Worker not found.");
-        }
+        if (!worker) return ResponseHandler.notFound(res, "Worker not found.");
 
-        // 🔹 Check if worker has already applied
-        const alreadyApplied = await prisma.job.findFirst({
-            where: {
-                Id: id,
-                Applicants: { some: { Id: WorkerId } }
-            }
+        // 🔹 Check if worker already applied
+        const existingApplication = await prisma.jobApplication.findFirst({
+            where: { JobId: id, WorkerId: WorkerId }
         });
 
-        if (alreadyApplied) {
+        if (existingApplication) {
             return ResponseHandler.conflict(res, "Worker has already applied for this job.");
         }
 
-        // 🔹 Add worker to job's Applicants list
-        const updatedJob = await prisma.job.update({
-            where: { Id: id },
-            data: {
-                Applicants: { connect: { Id: WorkerId } }
-            },
-            include: { Applicants: true }
+        // 🔹 Create new job application (default status: PENDING)
+        const jobApplication = await prisma.jobApplication.create({
+            data: { JobId: id, WorkerId: WorkerId }
         });
 
-        return ResponseHandler.success(res, 200, "Worker applied successfully", updatedJob);
-
+        return ResponseHandler.success(res, 200, "Worker applied successfully", jobApplication);
 });
 
 
@@ -227,3 +217,85 @@ export const getJobApplicants = apiHandler(async (req, res) => {
         return ResponseHandler.success(res, 200, "Applicants retrieved successfully", job.Applicants);
 
 });
+
+
+export const getEmployerJobApplications = apiHandler(async (req, res) => {
+    const { id } = req.params; // Employer ID
+        // 🔹 Fetch all jobs posted by this employer
+        const jobs = await prisma.job.findMany({
+            where: { EmployerId: id },
+            select: {
+                Id: true,
+                Title: true,
+                JobApplications: {
+                    include: {
+                        Worker: { select: { Id: true, FirstName: true, LastName: true, Skills: true } }
+                    }
+                }
+            }
+        });
+
+        return ResponseHandler.success(res, 200, "Job applications retrieved successfully", jobs);
+
+});
+
+export const getWorkerApplications = apiHandler(async (req, res) => {
+    const { id } = req.params; // Worker ID
+
+        // 🔹 Check if worker exists
+        const worker = await prisma.worker.findUnique({ where: { Id: id } });
+        if (!worker) {
+            return ResponseHandler.notFound(res, "Worker not found.");
+        }
+
+        // 🔹 Fetch all jobs the worker applied for
+        const applications = await prisma.jobApplication.findMany({
+            where: { WorkerId: id },
+            include: {
+                Job: {
+                    select: { Id: true, Title: true, Description: true, Employer: { select: { Name: true } } }
+                }
+            }
+        });
+
+        return ResponseHandler.success(res, 200, "Worker job applications retrieved successfully", applications);
+
+});
+
+
+export const updateApplicationStatus = apiHandler(async (req, res) => {
+    const { jobId, workerId } = req.params;
+    const { Status } = req.body; // New status
+
+    // 🔹 Validate status
+    if (!["PENDING", "ACCEPTED", "REJECTED"].includes(Status)) {
+        return ResponseHandler.badRequest(res, "Invalid application status.");
+    }
+
+        // 🔹 Check if job exists
+        const job = await prisma.job.findUnique({ where: { Id: jobId } });
+        if (!job) return ResponseHandler.notFound(res, "Job not found.");
+
+        // 🔹 Check if worker exists
+        const worker = await prisma.worker.findUnique({ where: { Id: workerId } });
+        if (!worker) return ResponseHandler.notFound(res, "Worker not found.");
+
+        console.log(jobId)
+        // 🔹 Check if application exists
+
+        const application = await prisma.jobApplication.findFirst({
+            where: { JobId: jobId, WorkerId: workerId }
+        });
+
+        if (!application) {
+            return ResponseHandler.notFound(res, "Application not found.");
+        }
+
+        // 🔹 Update application status
+        const updatedApplication = await prisma.jobApplication.updateMany({
+            where: { JobId: jobId, WorkerId: workerId },
+            data: { Status }
+        });
+
+        return ResponseHandler.success(res, 200, "Application status updated successfully", updatedApplication);
+    })

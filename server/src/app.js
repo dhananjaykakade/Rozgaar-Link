@@ -11,6 +11,8 @@ import WorkerRoute from "./routes/worker.route.js";
 import EmployerRoute from "./routes/employer.route.js";
 import JobRoute from "./routes/job.route.js";
 import ratingRoute from "./routes/rating.route.js";
+import authRoutes from "./routes/auth.js";
+
 
 
 const app = express();
@@ -47,6 +49,7 @@ express.urlencoded({ extended: true })
 
 // Default forbidden route
 app.get("/", (_, res) => ResponseHandler.forbidden(res));
+app.use("/api/auth", authRoutes);
 app.use("/api", routes);
 app.use("/api", WorkerRoute);
 app.use("/api", EmployerRoute);

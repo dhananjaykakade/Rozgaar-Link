@@ -186,3 +186,42 @@ export const getWorkerById = apiHandler(async (req, res) => {
     return ResponseHandler.success(res, 200, '✅ Documents uploaded successfully', updatedWorker);
   });
   
+
+
+
+  /**
+ * Retrieves a list of workers based on optional query parameters.
+ * @param {Request} req - The request object containing query parameters.
+ * @param {Response} res - The response object.
+ * @returns {Promise<void>} - Returns a list of workers with filtered data.
+ *
+ * Query Parameters:
+ * - `city` (string): Filter workers by city.
+ * - `skill` (string): Filter workers by specific skill.
+ * - `availability` (string): Filter workers by availability status.
+ */
+export const getWorkersWithQuery = apiHandler(async (req, res) => {
+    const { city, skill, availability } = req.query;
+  
+    const filters = {};
+    if (city) filters.City = city;
+    if (skill) filters.Skills = { has: skill };
+    if (availability) filters.Availability = availability;
+  
+    const workers = await prisma.worker.findMany({
+      where: filters,
+      select: {
+        Id: true,
+        FirstName: true,
+        LastName: true,
+        City: true,
+        Availability: true,
+        Skills: true,
+        Rating: true,
+        CreatedAt: true,
+      },
+    });
+  
+    return ResponseHandler.success(res, 200, "Workers retrieved successfully", workers);
+  });
+  

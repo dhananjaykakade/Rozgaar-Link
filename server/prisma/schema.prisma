@@ -36,6 +36,7 @@ model Worker {
   LastName       String
   Address        String
   City           String
+  Number         String    @unique
   Pin            String
   Availability   Availability
   Skills         String[]
@@ -99,7 +100,7 @@ model Rating {
 model Document {
   Id           String   @id @default(auto()) @map("_id") @db.ObjectId
   IdProof      String // Mandatory
-  AddressProof String // Mandatory
+  AddressProof String? // Mandatory
   SkillsProof  String? // Optional
   Worker       Worker[]
 }

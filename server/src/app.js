@@ -16,6 +16,7 @@ const app = express();
 const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:5173',
+    'http://127.0.0.1:5500',
 ];
 
 // CORS configuration
@@ -39,6 +40,7 @@ app.use(express.json());
 app.use(cors(corsOptions));
 app.use(helmet());
 app.use(cookieParser());
+express.urlencoded({ extended: true })
 
 // Default forbidden route
 app.get("/", (_, res) => ResponseHandler.forbidden(res));

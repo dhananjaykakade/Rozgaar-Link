@@ -22,6 +22,7 @@ const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:5173',
     'http://127.0.0.1:5500',
+    'http://172.16.0.159:3000'
 ];
 
 // CORS configuration

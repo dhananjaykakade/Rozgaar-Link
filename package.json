@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "concurrently": "^9.1.2",
+    "geolib": "^3.3.4",
     "jwt-decode": "^4.0.0"
   }
 }

@@ -1,4 +1,6 @@
 "use client";
+import { selectAuth, updateProfile } from "@/store/slices/authSlice"; 
+import { useSelector, useDispatch } from "react-redux";
 
 import { WorkerLayout } from "@/components/worker-layout";
 import { Button } from "@/components/ui/button";
@@ -68,6 +70,11 @@ interface Job {
   Applicants: Applicant[];
 }
 
+interface CheckStatus {
+  JobId: string;
+  Status: string;
+}
+
 export default function JobDetailPage() {
   const { id } = useParams();
   const { toast } = useToast();
@@ -77,32 +84,64 @@ export default function JobDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
-
+  const { user } = useSelector(selectAuth); 
   // ✅ Fetch Job Data from API
   useEffect(() => {
     const fetchJobDetails = async () => {
       try {
+        // Fetch job details
         const response = await axios.get(`http://localhost:4000/api/job/${id}`);
         setJob(response.data.data);
+        console.log(response.data.data);
+  
+        // Fetch job applications for the worker
+        const response2 = await axios.get(`http://localhost:4000/api/job/worker/${user?.Id}`);
+        console.log(response2.data.data);
+  
+
+    // Filter job applications for the worker where the jobId matches and the status is "PENDING"
+     response2.data.data.forEach(job => {
+if(job.Job.Id === id && job.Status ==="PENDING" ){
+  setApplied(true);
+}
+    })
+   
+
+
+        // If the worker has applied to the job with a "pending" status, set `isApplied` to true
+   
+        
       } catch (err) {
         setError("Failed to load job details.");
+        console.error(err);  // Log the error for debugging
       } finally {
-        setLoading(false);
+        setLoading(false);  // Hide loading indicator once the request is complete
       }
     };
-
+  
+    // Fetch job details if `id` is available
     if (id) fetchJobDetails();
-  }, [id]);
+  }, [id, user?.Id]);
 
   const handleApply = async () => {
-    setApplying(true);
-    // Simulate API call
-    setTimeout(() => {
-      setApplying(false);
-      setApplied(true);
-      toast({ title: "Application Submitted", description: "Your application has been sent to the employer" });
-    }, 1500);
-  };
+    const response = await axios.post(`http://localhost:4000/api/job/${id}/apply`
+      ,{
+        WorkerId: user?.Id,
+
+      }
+    )
+    try {
+      alert("applied")
+    setApplied(true);
+      // Set applied state to true when the application is successful
+  } catch (err) {
+    console.error(err);
+    setError("Failed to apply job details");
+  } finally {
+    setApplying(false);  // Set applying state back to false when the request finishes
+  }
+};
+ 
 
   if (loading) {
     return (
@@ -198,16 +237,19 @@ export default function JobDetailPage() {
                 <CardTitle>Apply for this Job</CardTitle>
               </CardHeader>
               <CardContent>
-                {applied ? (
-                  <div className="text-center py-4">
-                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
-                    <h3 className="font-medium text-lg">Application Sent!</h3>
-                  </div>
-                ) : (
-                  <Button className="w-full" onClick={handleApply} disabled={applying}>
-                    {applying ? "Sending Application..." : "Apply Now"}
-                  </Button>
-                )}
+              {applied ? (
+  <div className="text-center py-4">
+    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
+    <h3 className="font-medium text-lg">Application Sent!</h3>
+  </div>
+) : (
+  <Button 
+    onClick={handleApply} 
+    disabled={applied || applying}
+  >
+    {applying ? 'Applying...' : 'Apply Now'}
+  </Button>
+)}
               </CardContent>
             </Card>
 
@@ -217,12 +259,16 @@ export default function JobDetailPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback>{job.Employer.Name.charAt(0)}</AvatarFallback>
-                  </Avatar>
+               <Avatar className="h-24 w-24">
+                    {!user ? (
+  <AvatarFallback className="text-xl">A</AvatarFallback>
+) : (
+  <AvatarFallback className="text-xl">{user.companyName?.charAt(0) || "U"}</AvatarFallback>
+)}
+                    </Avatar>
                   <div>
-                    <p className="font-medium">{job.Employer.Name}</p>
-                    <p className="text-sm text-muted-foreground">{job.Employer.Rating} ★</p>
+                    <p className="font-medium">{job.Employer?.Name}</p>
+                    <p className="text-sm text-muted-foreground">{job.Employer?.Rating} ★</p>
                   </div>
                 </div>
               </CardContent>

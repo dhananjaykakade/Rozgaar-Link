@@ -182,10 +182,17 @@ export const applyForJob = apiHandler(async (req, res) => {
         const worker = await prisma.worker.findUnique({ where: { Id: WorkerId } });
         if (!worker) return ResponseHandler.notFound(res, "Worker not found.");
 
-        // 🔹 Check if worker already applied
+        // 🔹 Check if worker already applied and change the state to pending
+        // If the application status is not PENDING, return conflict
+        // Else, update the application status to PENDING
         const existingApplication = await prisma.jobApplication.findFirst({
-            where: { JobId: id, WorkerId: WorkerId }
+            where: { JobId: id, WorkerId: WorkerId
+
+             }
         });
+        if (existingApplication && existingApplication.Status!== "PENDING") {
+            return ResponseHandler.conflict(res, "Worker has already applied for this job and cannot be updated.");
+        }
 
         if (existingApplication) {
             return ResponseHandler.conflict(res, "Worker has already applied for this job.");
@@ -199,7 +206,24 @@ export const applyForJob = apiHandler(async (req, res) => {
         return ResponseHandler.success(res, 200, "Worker applied successfully", jobApplication);
 });
 
+// get job application status from userid 
 
+export const getWorkerJobApplicationStatus = apiHandler(async (req, res) => {
+    const { id } = req.params; // Worker ID
+
+    // Check if worker exists and include JobApplications
+    const worker = await prisma.jobApplication.findMany({
+        where: { WorkerId: id },
+        select: {
+            Id: true,
+            Status: true,
+            Job: true, // You can also include Job details if needed
+            Worker: true // Optionally, include Worker details if necessary
+        }
+    });
+    return ResponseHandler.success(res, 200, "Applicants retrieved successfully", worker);
+
+});
 
 export const getJobApplicants = apiHandler(async (req, res) => {
     const { id } = req.params;
@@ -271,7 +295,7 @@ export const updateApplicationStatus = apiHandler(async (req, res) => {
     const { Status } = req.body; // New status
 
     // 🔹 Validate status
-    if (!["PENDING", "ACCEPTED", "REJECTED"].includes(Status)) {
+    if (![ "ACCEPTED", "REJECTED"].includes(Status)) {
         return ResponseHandler.badRequest(res, "Invalid application status.");
     }
 
@@ -306,33 +330,7 @@ export const updateApplicationStatus = apiHandler(async (req, res) => {
     // create route to get job application posted by single user 
     export const getAllJobsBySingleUser = apiHandler(async (req,res) => {
         const { id } = req.params; // User ID
-        // �� Fetch all jobs posted by this user follow below data structure
-        // {
-        //     "_id": {
-        //       "$oid": "67deb38dac87083c469208fc"
-        //     },
-        //     "Title": "Electrician Needed",
-        //     "Description": "Looking for an experienced electrician for a home wiring project.",
-        //     "EmployerId": {
-        //       "$oid": "67de8f6145cdb206f77da214"
-        //     },
-        //     "Location": "New York",
-        //     "Pay": 500,
-        //     "Skills": [
-        //       "Electrician",
-        //       "Wiring"
-        //     ],
-        //     "WorkingHours": "9 AM - 5 PM",
-        //     "StartDate": {
-        //       "$date": "2025-03-25T09:00:00.000Z"
-        //     },
-        //     "NumberOfWorkers": "ONE",
-        //     "AdditionalRequirements": "Must have valid license",
-        //     "Status": "ACTIVE",
-        //     "CreatedAt": {
-        //       "$date": "2025-03-22T12:56:45.108Z"
-        //     }
-        //   }
+  
         const jobs = await prisma.job.findMany({
             where: { EmployerId: id },
             select: {

@@ -227,7 +227,7 @@ export default function EmployerProfilePage() {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await axios.get(`http://localhost:4000/api/rating/67de8f6145cdb206f77da21a`); // Replace with actual API
+        const response = await axios.get(`http://localhost:4000/api/rating/${user?.Id}`); // Replace with actual API
         setReviews(response.data.data); // Assuming response.data.data contains the array
         // count rating from data length
         setRatingCount(response.data.data.length);

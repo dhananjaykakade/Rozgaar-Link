@@ -9,6 +9,8 @@ import { MapPinIcon, CalendarIcon, IndianRupeeIcon, Users, Eye, Edit, Trash2 } f
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { JobSkeleton } from "@/components/job-skeleton"
+import { selectAuth, updateProfile } from "@/store/slices/authSlice"; 
+import { useSelector, useDispatch } from "react-redux";
 
 // Mock job data
 const JOBS = [
@@ -63,7 +65,8 @@ export default function EmployerDashboard() {
 
   const activeJobs = jobs.filter((job) => job.status === "active")
   const closedJobs = jobs.filter((job) => job.status === "closed")
-
+  const { user } = useSelector(selectAuth); 
+console.log(user)
   return (
     <EmployerLayout>
       <div className="grid gap-6 md:grid-cols-3">

@@ -1,7 +1,6 @@
 "use client"
 
 import { WorkerLayout } from "@/components/worker-layout"
-import { useAuth } from "@/context/auth-context"
 import { useLanguage } from "@/context/language-context"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -104,7 +103,7 @@ const APPLICATIONS = [
 ]
 
 export default function ApplicationsPage() {
-  const { user } = useAuth()
+  
   const { t } = useLanguage()
   const [loading, setLoading] = useState(true)
   const [applications, setApplications] = useState<typeof APPLICATIONS>([])

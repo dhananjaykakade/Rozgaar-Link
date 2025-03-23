@@ -59,11 +59,11 @@ export const verifyOtp = apiHandler(async (req, res) => {
 
     // 🔹 If user not found, create a new user based on role
     if (!user) {
-        if (role === "Worker") {
+        if (role === "worker") {
             user = await prisma.worker.create({
                 data: { Number: phone }
             });
-        } else if (role === "Employer") {
+        } else if (role === "employer") {
             user = await prisma.employer.create({
                 data: { Number: phone}
             });

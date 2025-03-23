@@ -47,7 +47,7 @@ export function WorkerLayout({ children }: WorkerLayoutProps) {
 
   const handleLogout = () => {
     dispatch(logout());
-    router.push("/auth/login?role=worker");
+    router.push("/auth/login");
   };
 
   const NavItems = () => (

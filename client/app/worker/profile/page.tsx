@@ -54,6 +54,13 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 
+enum Availability {
+  IMMEDIATE = "IMMEDIATE",
+  WITHIN_ONE_WEEK = "WITHIN_ONE_WEEK",
+  WITHIN_TWO_WEEKS = "WITHIN_TWO_WEEKS",
+  WITHIN_A_MONTH = "WITHIN_A_MONTH"
+}
+
 // Mock worker data
 const WORKER = {
   id: "worker1",
@@ -65,7 +72,7 @@ const WORKER = {
   address: "Andheri East, Mumbai, Maharashtra",
   city: "Mumbai",
   pincode: "400069",
-  availability: "immediate",
+  availability: Availability.IMMEDIATE,
   skills: ["Construction", "Painting", "Plumbing"],
   experience:
     "I have 5 years of experience in construction work, including painting, plumbing, and general labor. I have worked on residential and commercial projects.",
@@ -157,7 +164,7 @@ export default function ProfilePage() {
     city: user?.City || "",
     pincode: user?.Pin || "",
     phone: user?.Number || "",
-    availability: user?.Availability || "IMMEDIATE",
+    availability: user?.Availability || Availability.IMMEDIATE,
     skills: user?.Skills || [],
     workExperience: user?.WorkExperience || null,
     education: user?.Education || null,
@@ -172,6 +179,13 @@ export default function ProfilePage() {
         skillsProof: user?.Documents?.SkillsProof || ""
     }
 });
+  const availabilityOptions = [
+    { value: Availability.IMMEDIATE, label: t("availability.immediate") },
+    { value: Availability.WITHIN_ONE_WEEK, label: t("availability.within_one_week") },
+    { value: Availability.WITHIN_TWO_WEEKS, label: t("availability.within_two_weeks") },
+    { value: Availability.WITHIN_A_MONTH, label: t("availability.within_a_month") }
+  ];
+
   const dispatch = useDispatch();
   const [showRatingDetails, setShowRatingDetails] = useState(false);
   const [selectedRating, setSelectedRating] = useState<
@@ -218,7 +232,7 @@ export default function ProfilePage() {
         );
         const worker = response.data.data;
         console.log("update profile",worker)
-        dispatch(updateProfile(worker)); // ✅ Update Redux Store
+        dispatch(updateProfile(worker)); // Update Redux Store
 
         
       } catch (error) {
@@ -268,7 +282,7 @@ export default function ProfilePage() {
       );
   
       // Update Redux store with the latest worker data
-      dispatch(updateProfile(user)); // ✅ Update Redux Store
+      dispatch(updateProfile(user)); // Update Redux Store
   
       // Notify user of success
       toast({
@@ -324,8 +338,6 @@ export default function ProfilePage() {
   const profileCompletionPercentage = calculateProfileCompletion();
 
  const [RatingCount, setRatingCount] = useState(Number)
-
-
 
 
 
@@ -544,7 +556,7 @@ export default function ProfilePage() {
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span>
                           Available:{" "}
-                          {profileData?.availability === "immediate"
+                          {profileData?.availability === Availability.IMMEDIATE
                             ? "Immediately"
                             : profileData?.availability}
                         </span>
@@ -712,21 +724,20 @@ export default function ProfilePage() {
                         </Label>
                         <Select
                           value={profileData.availability}
-                          onValueChange={handleSelectChange}
+                          onValueChange={(value: Availability) =>
+                            setProfileData({ ...profileData, availability: value })
+                          }
                           disabled={!editMode}
                         >
-                          <SelectTrigger id="availability">
-                            <SelectValue placeholder="Select availability" />
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("profile.select_availability")} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="immediate">Immediate</SelectItem>
-                            <SelectItem value="1week">Within 1 week</SelectItem>
-                            <SelectItem value="2weeks">
-                              Within 2 weeks
-                            </SelectItem>
-                            <SelectItem value="1month">
-                              Within 1 month
-                            </SelectItem>
+                            {availabilityOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>

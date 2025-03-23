@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./server
+    container_name: rozgaar-backend
+    ports:
+      - "4000:4000"
+    env_file:
+      - backend/.env
+    depends_on:
+      - mongo
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: >
+      sh -c "npx prisma generate &&
+             node server.js"
+  
+  frontend:
+    build: ./client
+    container_name: rozgaar-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    stdin_open: true
+    tty: true
+
+  mongo:
+    image: mongo
+    container_name: rozgaar-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

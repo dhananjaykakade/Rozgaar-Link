@@ -17,7 +17,7 @@ interface EmployerLayoutProps {
 }
 
 export function EmployerLayout({ children }: EmployerLayoutProps) {
-  const { user, loading,role } = useSelector(selectAuth); // ✅ Get Redux auth state
+  const { user, loading,role } = useSelector(selectAuth); // Get Redux auth state
   const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
@@ -57,7 +57,10 @@ export function EmployerLayout({ children }: EmployerLayoutProps) {
       <Button
         variant="ghost"
         className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent text-muted-foreground justify-start font-normal"
-        onClick={() => dispatch(logout())} // ✅ Use Redux logout action
+        onClick={() => {
+          dispatch(logout());
+          router.push('/');
+        }}
       >
         <LogOut className="h-4 w-4" />
         Logout

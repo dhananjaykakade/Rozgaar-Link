@@ -38,7 +38,7 @@ model Worker {
   City           String?
   Number         String?           @unique
   Pin            String?
-  Availability   Availability
+  Availability   Availability?
   Skills         String[]
   WorkExperience String?
   Education      String?

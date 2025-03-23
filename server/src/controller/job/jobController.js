@@ -42,6 +42,9 @@ export const createJob = apiHandler(async (req, res) => {
 
 export const getAllJobs = apiHandler(async (req, res) => {
         const jobs = await prisma.job.findMany({
+            include: {
+                Employer: true, // Fetch employer details
+            },
         });
 
         return ResponseHandler.success(res, 200, "Jobs retrieved successfully", jobs);
@@ -152,9 +155,9 @@ export const getJobById = apiHandler(async (req, res) => {
         const job = await prisma.job.findUnique({
             where: { Id: id },
             include: {
-                Employer: { select: { Name: true, CompanyName: true } },
-                Applicants: { select: { Id: true, FirstName: true, LastName: true, Skills: true } }
-            }
+                Employer: true,
+                Applicants: true, }
+            
         });
 
         if (!job) {

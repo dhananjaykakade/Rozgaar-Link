@@ -25,13 +25,8 @@ export function WorkerLayout({ children }: WorkerLayoutProps) {
   const dispatch = useDispatch();
   
   // ✅ Get user data from Redux Store
-  const { user, loading } = useSelector(selectAuth);
+  const { user, loading,role } = useSelector(selectAuth);
 
-  useEffect(() => {
-    if (!loading && (!user || user.role !== "worker")) {
-      router.push("/auth/login?role=worker");
-    }
-  }, [user, loading, router, pathname]);
 
   if (loading) {
     return (

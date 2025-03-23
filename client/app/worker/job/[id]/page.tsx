@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { WorkerLayout } from "@/components/worker-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { WorkerLayout } from "@/components/worker-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   MapPinIcon,
   CalendarIcon,
@@ -14,57 +14,114 @@ import {
   BriefcaseIcon,
   CheckCircle,
   MessageSquare,
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { useState } from "react"
-import Link from "next/link"
+  Users,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import axios from "axios";
 
-// Mock job data
-const JOB = {
-  id: "job1",
-  title: "Construction Helper",
-  description:
-    "We are looking for construction helpers for a residential building project. The work involves carrying materials, assisting masons, and general labor work. Experience in construction is preferred but not mandatory.",
-  location: "Andheri East, Mumbai",
-  address: "Near Metro Station, Andheri East, Mumbai - 400069",
-  wage: "₹600 per day",
-  duration: "15 days",
-  startDate: "April 1, 2025",
-  workingHours: "8 AM - 5 PM",
-  postedAt: "March 20, 2025",
-  skills: ["Construction", "Labor", "Painting"],
-  requirements: [
-    "Ability to lift heavy objects up to 20kg",
-    "Basic understanding of construction tools",
-    "Willingness to work in all weather conditions",
-    "Punctuality and reliability",
-  ],
-  employer: {
-    id: "emp1",
-    name: "ABC Construction",
-    rating: 4.5,
-    jobsPosted: 24,
-    hiredCount: 120,
-  },
+interface Applicant {
+  Id: string;
+  FirstName: string;
+  LastName: string;
+  Address: string;
+  City: string;
+  Number: string;
+  Pin: string;
+  Availability: string;
+  Skills: string[];
+  Rating: number;
 }
 
-export default function JobDetailPage({ params }: { params: { id: string } }) {
-  const { toast } = useToast()
-  const [applying, setApplying] = useState(false)
-  const [applied, setApplied] = useState(false)
+interface Employer {
+  Id: string;
+  Name: string;
+  Number: string;
+  CompanyName: string | null;
+  ContactPerson: string;
+  Email: string | null;
+  Website: string | null;
+  Address: string;
+  City: string;
+  Pin: string;
+  DescriptionOfWork: string;
+  Rating: number;
+}
 
-  const handleApply = () => {
-    setApplying(true)
+interface Job {
+  Id: string;
+  Title: string;
+  Description: string;
+  EmployerId: string;
+  Location: string;
+  Pay: number;
+  Skills: string[];
+  WorkingHours: string;
+  StartDate: string;
+  NumberOfWorkers: string;
+  AdditionalRequirements: string;
+  Status: string;
+  CreatedAt: string;
+  Employer: Employer;
+  Applicants: Applicant[];
+}
 
+export default function JobDetailPage() {
+  const { id } = useParams();
+  const { toast } = useToast();
+
+  const [job, setJob] = useState<Job | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [applying, setApplying] = useState(false);
+  const [applied, setApplied] = useState(false);
+
+  // ✅ Fetch Job Data from API
+  useEffect(() => {
+    const fetchJobDetails = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4000/api/job/${id}`);
+        setJob(response.data.data);
+      } catch (err) {
+        setError("Failed to load job details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchJobDetails();
+  }, [id]);
+
+  const handleApply = async () => {
+    setApplying(true);
     // Simulate API call
     setTimeout(() => {
-      setApplying(false)
-      setApplied(true)
-      toast({
-        title: "Application Submitted",
-        description: "Your application has been sent to the employer",
-      })
-    }, 1500)
+      setApplying(false);
+      setApplied(true);
+      toast({ title: "Application Submitted", description: "Your application has been sent to the employer" });
+    }, 1500);
+  };
+
+  if (loading) {
+    return (
+      <WorkerLayout>
+        <div className="container py-6 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </WorkerLayout>
+    );
+  }
+
+  if (error || !job) {
+    return (
+      <WorkerLayout>
+        <div className="container py-6 text-center">
+          <p className="text-red-500">{error || "No job details found."}</p>
+        </div>
+      </WorkerLayout>
+    );
   }
 
   return (
@@ -77,13 +134,15 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-2xl">{JOB.title}</CardTitle>
+                    <CardTitle className="text-2xl">{job.Title}</CardTitle>
                     <CardDescription className="flex items-center mt-1">
                       <MapPinIcon className="h-4 w-4 mr-1" />
-                      {JOB.location}
+                      {job.Location}
                     </CardDescription>
                   </div>
-                  <Badge variant="outline">Posted on {JOB.postedAt}</Badge>
+                  <Badge variant={job.Status === "ACTIVE" ? "default" : "secondary"}>
+                    {job.Status}
+                  </Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -91,29 +150,22 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                   <div className="flex items-center">
                     <IndianRupeeIcon className="h-4 w-4 mr-2 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">{JOB.wage}</p>
+                      <p className="font-medium">₹{job.Pay}</p>
                       <p className="text-xs text-muted-foreground">Daily wage</p>
                     </div>
                   </div>
                   <div className="flex items-center">
                     <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">{JOB.duration}</p>
-                      <p className="text-xs text-muted-foreground">Duration</p>
+                      <p className="font-medium">{job.NumberOfWorkers}</p>
+                      <p className="text-xs text-muted-foreground">Workers needed</p>
                     </div>
                   </div>
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">{JOB.workingHours}</p>
+                      <p className="font-medium">{job.WorkingHours}</p>
                       <p className="text-xs text-muted-foreground">Working hours</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <BriefcaseIcon className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{JOB.startDate}</p>
-                      <p className="text-xs text-muted-foreground">Start date</p>
                     </div>
                   </div>
                 </div>
@@ -122,37 +174,17 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
 
                 <div>
                   <h3 className="font-medium mb-2">Job Description</h3>
-                  <p className="text-sm text-muted-foreground">{JOB.description}</p>
+                  <p className="text-sm text-muted-foreground">{job.Description}</p>
                 </div>
 
                 <div>
                   <h3 className="font-medium mb-2">Skills Required</h3>
                   <div className="flex flex-wrap gap-2">
-                    {JOB.skills.map((skill) => (
+                    {job.Skills.map((skill) => (
                       <Badge key={skill} variant="secondary">
                         {skill}
                       </Badge>
                     ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-medium mb-2">Requirements</h3>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    {JOB.requirements.map((req, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                        <span>{req}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="font-medium mb-2">Job Location</h3>
-                  <p className="text-sm text-muted-foreground">{JOB.address}</p>
-                  <div className="mt-2 h-40 bg-muted rounded-md flex items-center justify-center">
-                    <p className="text-sm text-muted-foreground">Map view will be displayed here</p>
                   </div>
                 </div>
               </CardContent>
@@ -164,14 +196,12 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
             <Card>
               <CardHeader>
                 <CardTitle>Apply for this Job</CardTitle>
-                <CardDescription>Send your application to the employer</CardDescription>
               </CardHeader>
               <CardContent>
                 {applied ? (
                   <div className="text-center py-4">
                     <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
                     <h3 className="font-medium text-lg">Application Sent!</h3>
-                    <p className="text-sm text-muted-foreground mt-1">The employer will review your application soon</p>
                   </div>
                 ) : (
                   <Button className="w-full" onClick={handleApply} disabled={applying}>
@@ -179,13 +209,6 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                   </Button>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-center">
-                {applied && (
-                  <Link href="/worker/applications">
-                    <Button variant="link">View My Applications</Button>
-                  </Link>
-                )}
-              </CardFooter>
             </Card>
 
             <Card>
@@ -195,46 +218,12 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
-                    <AvatarFallback>{JOB.employer.name.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>{job.Employer.Name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">{JOB.employer.name}</p>
-                    <p className="text-sm text-muted-foreground">{JOB.employer.rating} ★ • Member since 2023</p>
+                    <p className="font-medium">{job.Employer.Name}</p>
+                    <p className="text-sm text-muted-foreground">{job.Employer.Rating} ★</p>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex flex-col">
-                    <span className="font-medium">{JOB.employer.jobsPosted}</span>
-                    <span className="text-muted-foreground">Jobs Posted</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{JOB.employer.hiredCount}</span>
-                    <span className="text-muted-foreground">Workers Hired</span>
-                  </div>
-                </div>
-
-                <Button variant="outline" className="w-full flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  Contact Employer
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Similar Jobs</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center py-4">
-                  <p className="text-sm text-muted-foreground">
-                    Complete your profile to see similar job recommendations
-                  </p>
-                  <Link href="/worker/profile">
-                    <Button variant="link" className="mt-2">
-                      Update Profile
-                    </Button>
-                  </Link>
                 </div>
               </CardContent>
             </Card>
@@ -242,6 +231,5 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
         </div>
       </div>
     </WorkerLayout>
-  )
+  );
 }
-

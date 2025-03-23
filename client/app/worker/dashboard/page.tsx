@@ -1,113 +1,42 @@
-"use client"
+"use client";
 
-import { WorkerLayout } from "@/components/worker-layout"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MapPinIcon, CalendarIcon, IndianRupeeIcon } from "lucide-react"
-import Link from "next/link"
-import { useState, useEffect } from "react"
-import { JobSkeleton } from "@/components/job-skeleton"
-
-// Mock job data
-const JOBS = [
-  {
-    id: "job1",
-    title: "Construction Helper",
-    location: "Andheri East, Mumbai",
-    wage: "₹600 per day",
-    duration: "15 days",
-    postedAt: "2 hours ago",
-    skills: ["Construction", "Labor", "Painting"],
-    employer: {
-      name: "ABC Construction",
-      rating: 4.5,
-    },
-  },
-  {
-    id: "job2",
-    title: "Plumbing Work",
-    location: "Powai, Mumbai",
-    wage: "₹800 per day",
-    duration: "3 days",
-    postedAt: "5 hours ago",
-    skills: ["Plumbing", "Repair"],
-    employer: {
-      name: "XYZ Maintenance",
-      rating: 4.2,
-    },
-  },
-  {
-    id: "job3",
-    title: "Electrician Needed",
-    location: "Bandra West, Mumbai",
-    wage: "₹900 per day",
-    duration: "2 days",
-    postedAt: "1 day ago",
-    skills: ["Electrical", "Wiring", "Installation"],
-    employer: {
-      name: "Modern Interiors",
-      rating: 4.7,
-    },
-  },
-  {
-    id: "job4",
-    title: "Gardening & Landscaping",
-    location: "Juhu, Mumbai",
-    wage: "₹550 per day",
-    duration: "7 days",
-    postedAt: "2 days ago",
-    skills: ["Gardening", "Landscaping"],
-    employer: {
-      name: "Green Spaces Inc",
-      rating: 4.0,
-    },
-  },
-  {
-    id: "job5",
-    title: "House Painting",
-    location: "Malad, Mumbai",
-    wage: "₹700 per day",
-    duration: "10 days",
-    postedAt: "3 days ago",
-    skills: ["Painting", "Interior"],
-    employer: {
-      name: "Color Masters",
-      rating: 4.3,
-    },
-  },
-]
+import { WorkerLayout } from "@/components/worker-layout";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MapPinIcon, CalendarIcon, IndianRupeeIcon } from "lucide-react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { JobSkeleton } from "@/components/job-skeleton";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllJobs, selectAllJobsState } from "@/store/slices/allJobsSlice";
+import { AppDispatch } from "@/store/store";
 
 export default function WorkerDashboard() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [location, setLocation] = useState("")
-  const [loading, setLoading] = useState(true)
-  const [jobs, setJobs] = useState<typeof JOBS>([])
+  const dispatch = useDispatch<AppDispatch>();
+  const { allJobs, loading } = useSelector(selectAllJobsState);
 
-  // Simulate loading state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [location, setLocation] = useState("");
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setJobs(JOBS)
-      setLoading(false)
-    }, 1500)
-
-    return () => clearTimeout(timer)
-  }, [])
+    dispatch(fetchAllJobs());
+  }, [dispatch]);
 
   // Filter jobs based on search term and location
-  const filteredJobs = jobs.filter((job) => {
+  const filteredJobs = allJobs.filter((job) => {
     const matchesSearch =
       searchTerm === "" ||
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.skills.some((skill) => skill.toLowerCase().includes(searchTerm.toLowerCase()))
+      job.Title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.Skills.some((skill) => skill.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesLocation = location === "" || job.location.toLowerCase().includes(location.toLowerCase())
+    const matchesLocation = location === "" || job.Location.toLowerCase().includes(location.toLowerCase());
 
-    return matchesSearch && matchesLocation
-  })
+    return matchesSearch && matchesLocation;
+  });
 
   return (
     <WorkerLayout>
@@ -166,19 +95,19 @@ export default function WorkerDashboard() {
               ) : filteredJobs.length > 0 ? (
                 <div className="space-y-4">
                   {filteredJobs.map((job) => (
-                    <Link href={`/worker/job/${job.id}`} key={job.id} className="block">
+                    <Link href={`/worker/job/${job.Id}`} key={job.Id} className="block">
                       <Card className="hover:border-primary/50 transition-colors">
                         <CardHeader className="pb-2">
                           <div className="flex justify-between items-start">
                             <div>
-                              <CardTitle>{job.title}</CardTitle>
+                              <CardTitle>{job.Title}</CardTitle>
                               <CardDescription className="flex items-center mt-1">
                                 <MapPinIcon className="h-3.5 w-3.5 mr-1" />
-                                {job.location}
+                                {job.Location}
                               </CardDescription>
                             </div>
                             <Badge variant="outline" className="text-xs">
-                              {job.postedAt}
+                              {new Date(job.CreatedAt).toLocaleDateString()}
                             </Badge>
                           </div>
                         </CardHeader>
@@ -186,15 +115,15 @@ export default function WorkerDashboard() {
                           <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                             <div className="flex items-center">
                               <IndianRupeeIcon className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                              <span>{job.wage}</span>
+                              <span>₹{job.Pay}</span>
                             </div>
                             <div className="flex items-center">
                               <CalendarIcon className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                              <span>{job.duration}</span>
+                              <span>{job.WorkingHours}</span>
                             </div>
                           </div>
                           <div className="flex flex-wrap gap-1">
-                            {job.skills.map((skill) => (
+                            {job.Skills.map((skill) => (
                               <Badge key={skill} variant="secondary" className="text-xs">
                                 {skill}
                               </Badge>
@@ -202,7 +131,7 @@ export default function WorkerDashboard() {
                           </div>
                         </CardContent>
                         <CardFooter className="pt-2 text-sm text-muted-foreground">
-                          {job.employer.name} • {job.employer.rating} ★
+                          {job.Employer?.Name || "Unknown Employer"} • {job.Employer?.Rating || "N/A"} ★
                         </CardFooter>
                       </Card>
                     </Link>
@@ -214,8 +143,8 @@ export default function WorkerDashboard() {
                   <Button
                     variant="link"
                     onClick={() => {
-                      setSearchTerm("")
-                      setLocation("")
+                      setSearchTerm("");
+                      setLocation("");
                     }}
                   >
                     Clear filters
@@ -241,6 +170,5 @@ export default function WorkerDashboard() {
         </div>
       </div>
     </WorkerLayout>
-  )
+  );
 }
-

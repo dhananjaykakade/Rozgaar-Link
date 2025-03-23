@@ -50,7 +50,7 @@ export default function VerifyPage() {
       toast({ title: "Login successful", description: "You have been logged in successfully" });
 
       // 🚀 Redirect to dashboard based on role
-      router.push(user.role === "worker" ? "/worker/dashboard" : "/employer/dashboard");
+      router.push(role === "worker" ? "/worker/dashboard" : "/employer/dashboard");
     } catch (error) {
       toast({ title: "Verification failed", description: "Invalid OTP. Please try again.", variant: "destructive" });
       setIsSubmitting(false);

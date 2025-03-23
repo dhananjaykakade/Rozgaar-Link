@@ -248,3 +248,27 @@ export const getWorkerById = apiHandler(async (req, res) => {
     }
 });
   
+// make post request to add data to worker 
+
+
+export const updateWorker = apiHandler(async (req, res) => {
+  const { id } = req.params; // Get worker ID from URL params
+  const { FirstName, LastName, Number, City, Availability, Skills,Address,Pin,WorkExperience,Education } = req.body;
+
+  // 🔹 Find worker by ID & update
+  const updatedWorker = await prisma.worker.update({
+    where: { Id: id },  // Ensure correct worker is updated
+    data: {
+      FirstName,
+      LastName,
+      Number,
+      City,
+      Availability,
+      Skills,
+      Education,
+      WorkExperience
+    },
+  });
+
+  return ResponseHandler.success(res, 200, "Worker updated successfully", updatedWorker);
+});

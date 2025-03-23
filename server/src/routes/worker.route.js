@@ -1,10 +1,11 @@
 import express from "express";
-import {getWorkers,getWorkerById,uploadWorkerDocument,getWorkersWithQuery} from "../controller/worker/workerController.js"
+import {getWorkers,getWorkerById,uploadWorkerDocument,getWorkersWithQuery ,updateWorker} from "../controller/worker/workerController.js"
 const router = express.Router();
 import upload from '../utils/multerConfig.js';
 
 // Get all workers
 router.get("/workers", getWorkers);
+router.put("/worker/:id", updateWorker);
 router.get("/worker/:id", getWorkerById);
 router.get("/worker/query/or", getWorkersWithQuery);
 router.post('/worker/:id', upload.fields([

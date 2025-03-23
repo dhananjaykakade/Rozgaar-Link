@@ -101,7 +101,7 @@ model Rating {
 
 model Document {
   Id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  IdProof      String // Mandatory
+  IdProof      String? // Mandatory
   AddressProof String? // Mandatory
   SkillsProof  String? // Optional
   Worker       Worker[]

@@ -22,17 +22,7 @@ export function EmployerLayout({ children }: EmployerLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.replace("/auth/login"); // ✅ Redirect if no user
-      } else if (pathname.startsWith("/employer") && user.role !== "employer") {
-        router.replace("/auth/login?role=employer"); // ✅ Redirect if wrong role
-      } else if (pathname.startsWith("/worker") && user.role !== "worker") {
-        router.replace("/auth/login?role=worker"); // ✅ Redirect if wrong role
-      }
-    }
-  }, [user, loading, pathname, router]);
+
 
   if (loading || !user) {
     return (

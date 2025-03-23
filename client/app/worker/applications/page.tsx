@@ -1,11 +1,12 @@
 "use client"
-
-import { WorkerLayout } from "@/components/worker-layout"
-import { useLanguage } from "@/context/language-context"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { selectAuth, updateProfile } from "@/store/slices/authSlice"; 
+import { useSelector, useDispatch } from "react-redux";
+import { WorkerLayout } from "@/components/worker-layout";
+import { useLanguage } from "@/context/language-context";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   MapPin,
   CalendarIcon,
@@ -15,123 +16,66 @@ import {
   XCircle,
   Clock3,
   Search,
-} from "lucide-react"
-import Link from "next/link"
-import { useState, useEffect } from "react"
-import { ApplicationSkeleton } from "@/components/application-skeleton"
-import { Input } from "@/components/ui/input"
-import { StarRating } from "@/components/star-rating"
+  Axis3dIcon,
+} from "lucide-react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { ApplicationSkeleton } from "@/components/application-skeleton";
+import { Input } from "@/components/ui/input";
+import { StarRating } from "@/components/star-rating";
+import axios from "axios";
 
 // Mock application data
-const APPLICATIONS = [
-  {
-    id: "app1",
-    status: "pending",
-    appliedAt: "March 21, 2025",
-    job: {
-      id: "job1",
-      title: "Construction Helper",
-      location: "Andheri East, Mumbai",
-      wage: "₹600 per day",
-      duration: "15 days",
-      employer: {
-        id: "emp1",
-        name: "ABC Construction",
-        rating: 4.5,
-        reviews: 28,
-      },
-    },
-  },
-  {
-    id: "app2",
-    status: "accepted",
-    appliedAt: "March 18, 2025",
-    job: {
-      id: "job2",
-      title: "Plumbing Work",
-      location: "Powai, Mumbai",
-      wage: "₹800 per day",
-      duration: "3 days",
-      employer: {
-        id: "emp2",
-        name: "XYZ Maintenance",
-        rating: 4.2,
-        reviews: 15,
-      },
-    },
-    completedOn: "March 25, 2025",
-    isRated: false,
-  },
-  {
-    id: "app3",
-    status: "rejected",
-    appliedAt: "March 15, 2025",
-    job: {
-      id: "job3",
-      title: "Electrician Needed",
-      location: "Bandra West, Mumbai",
-      wage: "₹900 per day",
-      duration: "2 days",
-      employer: {
-        id: "emp3",
-        name: "Modern Interiors",
-        rating: 4.7,
-        reviews: 32,
-      },
-    },
-  },
-  {
-    id: "app4",
-    status: "completed",
-    appliedAt: "March 10, 2025",
-    job: {
-      id: "job4",
-      title: "House Painting",
-      location: "Malad, Mumbai",
-      wage: "₹700 per day",
-      duration: "10 days",
-      employer: {
-        id: "emp4",
-        name: "Color Masters",
-        rating: 4.3,
-        reviews: 20,
-      },
-    },
-    completedOn: "March 20, 2025",
-    isRated: true,
-  },
-]
+interface Employer {
+  Name: string;
+}
 
+interface Job {
+  Id: string;
+  Title: string;
+  Description: string;
+  Employer: Employer;
+}
+
+interface Application {
+  Id: string;
+  JobId: string;
+  WorkerId: string;
+  Status: "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED"; // You can define exact status values if needed
+  AppliedAt: string;
+  Job: Job;
+}
 export default function ApplicationsPage() {
-  
-  const { t } = useLanguage()
-  const [loading, setLoading] = useState(true)
-  const [applications, setApplications] = useState<typeof APPLICATIONS>([])
-  const [searchTerm, setSearchTerm] = useState("")
+  const { user } = useSelector(selectAuth); 
+  const { t } = useLanguage();
+  const [loading, setLoading] = useState(true);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Simulate loading state
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setApplications(APPLICATIONS)
-      setLoading(false)
-    }, 1500)
-
-    return () => clearTimeout(timer)
-  }, [])
+    const fetchApplication = async() => {
+      const response = await axios.get(`http://localhost:4000/api/worker/${user?.Id}/applications`);
+      console.log(response.data.data);
+      setApplications(response.data.data);
+      setLoading(false);
+    }
+    fetchApplication();
+  }, [user?.Id]);
 
   // Filter applications based on search term
   const filteredApplications = applications.filter((app) => {
     return (
-      app.job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.job.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.job.employer.name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  })
+      app.Job.Title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.Job.Description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.Job.Employer.Name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
-  const pendingApplications = filteredApplications.filter((app) => app.status === "pending")
-  const acceptedApplications = filteredApplications.filter((app) => app.status === "accepted")
-  const rejectedApplications = filteredApplications.filter((app) => app.status === "rejected")
-  const completedApplications = filteredApplications.filter((app) => app.status === "completed")
+  const pendingApplications = filteredApplications.filter((app) => app.Status === "PENDING");
+  const acceptedApplications = filteredApplications.filter((app) => app.Status === "ACCEPTED");
+  const rejectedApplications = filteredApplications.filter((app) => app.Status === "REJECTED");
+  const completedApplications = filteredApplications.filter((app) => app.Status === "COMPLETED");
 
   const StatusBadge = ({ status }: { status: string }) => {
     switch (status) {
@@ -141,90 +85,65 @@ export default function ApplicationsPage() {
             <Clock3 className="h-3 w-3" />
             {t("worker.pending")}
           </Badge>
-        )
+        );
       case "accepted":
         return (
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
             <CheckCircle className="h-3 w-3" />
             {t("worker.accepted")}
           </Badge>
-        )
+        );
       case "rejected":
         return (
           <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
             <XCircle className="h-3 w-3" />
             {t("worker.rejected")}
           </Badge>
-        )
+        );
       case "completed":
         return (
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1">
             <CheckCircle className="h-3 w-3" />
             Completed
           </Badge>
-        )
+        );
       default:
-        return null
+        return null;
     }
-  }
+  };
 
-  const ApplicationCard = ({ application }: { application: (typeof APPLICATIONS)[0] }) => (
+  const ApplicationCard = ({ application }: { application: Application }) => (
     <Card>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle>{application.job.title}</CardTitle>
+            <CardTitle>{application.Job.Title}</CardTitle>
             <CardDescription className="flex items-center mt-1">
-              <MapPin className="h-3.5 w-3.5 mr-1" />
-              {application.job.location}
+              {/* Optional: Add location or other properties if available */}
             </CardDescription>
           </div>
-          <StatusBadge status={application.status} />
+          <StatusBadge status={application.Status} />
         </div>
       </CardHeader>
       <CardContent className="pb-2">
-        <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-          <div className="flex items-center">
-            <IndianRupeeIcon className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-            <span>{application.job.wage}</span>
-          </div>
-          <div className="flex items-center">
-            <CalendarIcon className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-            <span>{application.job.duration}</span>
-          </div>
-        </div>
         <div className="flex justify-between items-center">
           <div>
-            <p className="text-sm font-medium">{application.job.employer.name}</p>
-            <div className="flex items-center mt-1">
-              <StarRating
-                rating={application.job.employer.rating}
-                size="sm"
-                showCount={true}
-                count={application.job.employer.reviews}
-              />
-            </div>
+            <p className="text-sm font-medium">{application.Job.Employer.Name}</p>
           </div>
-          <p className="text-xs text-muted-foreground">Applied on {application.appliedAt}</p>
+          <p className="text-xs text-muted-foreground">Applied on {new Date(application.AppliedAt).toLocaleDateString()}</p>
         </div>
       </CardContent>
       <CardFooter className="pt-2 flex justify-between">
         <div className="flex gap-2">
-          <Link href={`/worker/job/${application.job.id}`}>
+          <Link href={`/worker/job/${application.Job.Id}`}>
             <Button variant="outline" size="sm">
               {t("worker.view_job")}
             </Button>
           </Link>
-          <Link href={`/worker/chat/${application.job.employer.id}`}>
-            <Button size="sm" className="flex items-center gap-1">
-              <MessageSquare className="h-3.5 w-3.5" />
-              {t("worker.chat")}
-            </Button>
-          </Link>
         </div>
-
-        {application.status === "completed" && !application.isRated && (
-          <Link href={`/worker/rate-employer/${application.job.employer.id}`}>
+  
+        {application.Status === "COMPLETED" && !application.isRated && (
+          <Link href={`/worker/rate-employer/${application.Job.Employer.Name}`}>
             <Button size="sm" variant="secondary">
               Rate Employer
             </Button>
@@ -232,7 +151,7 @@ export default function ApplicationsPage() {
         )}
       </CardFooter>
     </Card>
-  )
+  );
 
   return (
     <WorkerLayout>
@@ -274,7 +193,7 @@ export default function ApplicationsPage() {
               ) : filteredApplications.length > 0 ? (
                 <div className="space-y-4">
                   {filteredApplications.map((application) => (
-                    <ApplicationCard key={application.id} application={application} />
+                    <ApplicationCard key={application.Id} application={application} />
                   ))}
                 </div>
               ) : (
@@ -297,7 +216,7 @@ export default function ApplicationsPage() {
               ) : pendingApplications.length > 0 ? (
                 <div className="space-y-4">
                   {pendingApplications.map((application) => (
-                    <ApplicationCard key={application.id} application={application} />
+                    <ApplicationCard key={application.Id} application={application} />
                   ))}
                 </div>
               ) : (
@@ -315,7 +234,7 @@ export default function ApplicationsPage() {
               ) : acceptedApplications.length > 0 ? (
                 <div className="space-y-4">
                   {acceptedApplications.map((application) => (
-                    <ApplicationCard key={application.id} application={application} />
+                    <ApplicationCard key={application.Id} application={application} />
                   ))}
                 </div>
               ) : (
@@ -333,7 +252,7 @@ export default function ApplicationsPage() {
               ) : completedApplications.length > 0 ? (
                 <div className="space-y-4">
                   {completedApplications.map((application) => (
-                    <ApplicationCard key={application.id} application={application} />
+                    <ApplicationCard key={application.Id} application={application} />
                   ))}
                 </div>
               ) : (
@@ -351,7 +270,7 @@ export default function ApplicationsPage() {
               ) : rejectedApplications.length > 0 ? (
                 <div className="space-y-4">
                   {rejectedApplications.map((application) => (
-                    <ApplicationCard key={application.id} application={application} />
+                    <ApplicationCard key={application.Id} application={application} />
                   ))}
                 </div>
               ) : (
@@ -364,6 +283,5 @@ export default function ApplicationsPage() {
         </div>
       </div>
     </WorkerLayout>
-  )
+  );
 }
-

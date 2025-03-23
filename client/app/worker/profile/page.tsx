@@ -143,7 +143,7 @@ const WORKER = {
 export default function ProfilePage() {
   const { t } = useLanguage();
   const { toast } = useToast();
-
+ const [reviews, setReviews] = useState<{ Id: string; GivenBy: string; Rating: number; Review: string; CreatedAt: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [skills, setSkills] = useState<string[]>(WORKER.skills);
   const [newSkill, setNewSkill] = useState("");
@@ -186,6 +186,25 @@ export default function ProfilePage() {
   };
 
 
+    const calculateAverageStar = () => {
+      if (reviews.length === 0) return 0;
+      const totalStars = reviews.reduce((sum, review) => sum + review.Rating, 0);
+      return totalStars / reviews.length;
+    }
+    // Render star rating
+    const renderStars = (rating: number) => {
+      return (
+        <div className="flex">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <Star
+              key={star}
+              className={`h-4 w-4 ${star <= rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}`}
+            />
+          ))}
+        </div>
+      )
+    }
+
   const handleRemoveSkill = (skill: string) => {
     setSkills(skills.filter((s) => s !== skill));
   };
@@ -210,14 +229,26 @@ export default function ProfilePage() {
     fetchProfile();
   }, [user?.Id, dispatch]);
 
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+    setProfileData({
+      ...profileData,
+      [id]: value,
+    });
+    console.log("stting profile data" ,profileData)
+  };
+
   const handleSaveProfile = async () => {
-    console.log(user.Id);
+    console.log("redux",user.Id);
+    console.log("saving profile")
     setSaving(true);
   
     try {
       // Send a PUT request to update the worker profile
       await axios.put(
-        `http://localhost:4000/api/worker/${user.Id}`, // URL for worker API endpoint
+        `http://localhost:4000/api/worker/${user?.Id}`, // URL for worker API endpoint
         {
           FirstName: profileData?.firstName,
           LastName: profileData?.lastName,
@@ -261,15 +292,7 @@ export default function ProfilePage() {
   };
 
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { id, value } = e.target;
-    setProfileData({
-      ...profileData,
-      [id]: value,
-    });
-  };
+
 
   const handleSelectChange = (value: string) => {
     setProfileData({
@@ -300,24 +323,7 @@ export default function ProfilePage() {
 
   const profileCompletionPercentage = calculateProfileCompletion();
 
-  // Render star rating
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`h-4 w-4 ${
-              star <= rating
-                ? "text-yellow-500 fill-yellow-500"
-                : "text-gray-300"
-            }`}
-          />
-        ))}
-      </div>
-    );
-  };
-
+ const [RatingCount, setRatingCount] = useState(Number)
 
 
 
@@ -331,7 +337,22 @@ export default function ProfilePage() {
 
 
 
-
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4000/api/rating/${user?.Id}`); // Replace with actual API
+        setReviews(response.data.data); // Assuming response.data.data contains the array
+        // count rating from data length
+        setRatingCount(response.data.data.length);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    };
+  
+    if (user?.Id) {
+      fetchReviews();
+    }
+  }, [user?.Id]);
 
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, documentType: "idProof" | "addressProof" | "skillCertificates") => {
@@ -344,6 +365,14 @@ export default function ProfilePage() {
     }
   };
 
+  const [uploadedDocuments, setUploadedDocuments] = useState({
+    idProofUrl: "",
+    addressProofUrl: "",
+    skillCertificatesUrl: "",
+  });
+
+
+
   const handleUploadDocument = async (documentType: "idProof" | "addressProof" | "skillCertificates") => {
     const file = files[documentType];
     if (!file) {
@@ -354,7 +383,7 @@ export default function ProfilePage() {
       });
       return;
     }
-
+  
     const formData = new FormData();
     // Adjust the name of the file input field to match the backend requirement
     if (documentType === "idProof") {
@@ -364,12 +393,13 @@ export default function ProfilePage() {
     } else if (documentType === "skillCertificates") {
       formData.append("SkillsProof", file);
     }
+  
     setSaving(true);
-
-   
+  
     try {
+      // First upload the file
       const response = await axios.post(
-        `http://localhost:4000/api/worker/${user.Id}`, // Adjust the URL to your backend
+        `http://localhost:4000/api/worker/${user?.Id}`, // Adjust the URL to your backend
         formData,
         {
           headers: {
@@ -377,10 +407,33 @@ export default function ProfilePage() {
           },
         }
       );
+  
       toast({
         title: `${documentType} Uploaded`,
         description: `Your ${documentType} has been successfully uploaded.`,
       });
+
+      // After the upload, fetch the updated document info from the backend
+      const fetchUploadedDocuments = async () => {
+        try {
+          const docResponse = await axios.get(`http://localhost:4000/api/worker/${user?.Id}/documents`);
+          setUploadedDocuments({
+            idProofUrl: docResponse.data.data.Documents.IdProof || "",
+            addressProofUrl: docResponse.data.data.Documents.AddressProof || "",
+            skillCertificatesUrl: docResponse.data.data.Documents.SkillsProof || "",
+          });
+        } catch (error) {
+          toast({
+            title: "Failed to load documents",
+            description: "Unable to fetch the uploaded documents.",
+            variant: "destructive",
+          });
+        }
+      };
+  
+      // Call the function to fetch the updated documents
+      fetchUploadedDocuments();
+      
     } catch (error) {
       toast({
         title: "Upload Failed",
@@ -391,7 +444,26 @@ export default function ProfilePage() {
       setSaving(false);
     }
   };
+  const fetchUploadedDocuments = async () => {
+    try {
+      const docResponse = await axios.get(`http://localhost:4000/api/worker/${user?.Id}/documents`);
+      setUploadedDocuments({
+        idProofUrl: docResponse.data.data.Documents.IdProof || "",
+        addressProofUrl: docResponse.data.data.Documents.AddressProof || "",
+        skillCertificatesUrl: docResponse.data.data.Documents.SkillsProof || "",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to load documents",
+        description: "Unable to fetch the uploaded documents.",
+        variant: "destructive",
+      });
+    }
+  };
 
+  useEffect(() => {
+    fetchUploadedDocuments()
+  },[user?.Id])
 
 
   return (
@@ -662,9 +734,7 @@ export default function ProfilePage() {
                     {editMode && (
                       <CardFooter>
                         <Button onClick={handleSaveProfile} disabled={saving}>
-                          {saving
-                            ? t("profile.saving")
-                            : t("profile.save_changes")}
+                          {saving ? "Saving..." : "Save Changes"}
                         </Button>
                       </CardFooter>
                     )}
@@ -772,9 +842,7 @@ export default function ProfilePage() {
                 <Card>
       <CardHeader>
         <CardTitle>Documents & Verification</CardTitle>
-        <CardDescription>
-          Upload your documents for verification
-        </CardDescription>
+        <CardDescription>Upload your documents for verification</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* ID Proof */}
@@ -782,31 +850,43 @@ export default function ProfilePage() {
           <Label>ID Proof</Label>
           <div className="border rounded-md p-4 text-center">
             <div className="flex flex-col items-center justify-center py-4">
-              <Camera className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm font-medium">Upload ID Proof</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Aadhaar Card, PAN Card, Voter ID, etc.
-              </p>
-              <input
-                type="file"
-                id="idProof"
-                onChange={(e) => handleFileChange(e, "idProof")}
-                className="hidden"
-                accept="image/*,application/pdf"
-              />
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => document.getElementById("idProof")?.click()}
-              >
-                Upload Document
-              </Button>
-              {/* Upload Button */}
+              {uploadedDocuments.idProofUrl ? (
+                <>
+                  <img
+                    src={uploadedDocuments.idProofUrl}
+                    alt="ID Proof"
+                    className="w-32 h-32 object-cover mb-2"
+                  />
+                  <p className="text-sm font-medium">ID Proof Uploaded</p>
+                </>
+              ) : (
+                <>
+                  <Camera className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-sm font-medium">Upload ID Proof</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Aadhaar Card, PAN Card, Voter ID, etc.
+                  </p>
+                  <input
+                    type="file"
+                    id="idProof"
+                    onChange={(e) => handleFileChange(e, "idProof")}
+                    className="hidden"
+                    accept="image/*,application/pdf"
+                  />
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => document.getElementById("idProof")?.click()}
+                  >
+                    Upload Document
+                  </Button>
+                </>
+              )}
               <Button
                 variant="solid"
                 className="mt-4"
                 onClick={() => handleUploadDocument("idProof")}
-                disabled={saving}
+                disabled={saving || !!uploadedDocuments.idProofUrl}
               >
                 {saving ? "Uploading..." : "Submit ID Proof"}
               </Button>
@@ -819,31 +899,43 @@ export default function ProfilePage() {
           <Label>Address Proof</Label>
           <div className="border rounded-md p-4 text-center">
             <div className="flex flex-col items-center justify-center py-4">
-              <Camera className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm font-medium">Upload Address Proof</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Utility Bill, Rent Agreement, etc.
-              </p>
-              <input
-                type="file"
-                id="addressProof"
-                onChange={(e) => handleFileChange(e, "addressProof")}
-                className="hidden"
-                accept="image/*,application/pdf"
-              />
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => document.getElementById("addressProof")?.click()}
-              >
-                Upload Document
-              </Button>
-              {/* Upload Button */}
+              {uploadedDocuments.addressProofUrl ? (
+                <>
+                  <img
+                    src={uploadedDocuments.addressProofUrl}
+                    alt="Address Proof"
+                    className="w-32 h-32 object-cover mb-2"
+                  />
+                  <p className="text-sm font-medium">Address Proof Uploaded</p>
+                </>
+              ) : (
+                <>
+                  <Camera className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-sm font-medium">Upload Address Proof</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Utility Bill, Rent Agreement, etc.
+                  </p>
+                  <input
+                    type="file"
+                    id="addressProof"
+                    onChange={(e) => handleFileChange(e, "addressProof")}
+                    className="hidden"
+                    accept="image/*,application/pdf"
+                  />
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => document.getElementById("addressProof")?.click()}
+                  >
+                    Upload Document
+                  </Button>
+                </>
+              )}
               <Button
                 variant="solid"
                 className="mt-4"
                 onClick={() => handleUploadDocument("addressProof")}
-                disabled={saving}
+                disabled={saving || !!uploadedDocuments.addressProofUrl}
               >
                 {saving ? "Uploading..." : "Submit Address Proof"}
               </Button>
@@ -856,31 +948,43 @@ export default function ProfilePage() {
           <Label>Skill Certificates (Optional)</Label>
           <div className="border rounded-md p-4 text-center">
             <div className="flex flex-col items-center justify-center py-4">
-              <Camera className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm font-medium">Upload Certificates</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Training certificates, course completion, etc.
-              </p>
-              <input
-                type="file"
-                id="skillCertificates"
-                onChange={(e) => handleFileChange(e, "skillCertificates")}
-                className="hidden"
-                accept="image/*,application/pdf"
-              />
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => document.getElementById("skillCertificates")?.click()}
-              >
-                Upload Document
-              </Button>
-              {/* Upload Button */}
+              {uploadedDocuments.skillCertificatesUrl ? (
+                <>
+                  <img
+                    src={uploadedDocuments.skillCertificatesUrl}
+                    alt="Skill Certificates"
+                    className="w-32 h-32 object-cover mb-2"
+                  />
+                  <p className="text-sm font-medium">Skill Certificates Uploaded</p>
+                </>
+              ) : (
+                <>
+                  <Camera className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-sm font-medium">Upload Certificates</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Training certificates, course completion, etc.
+                  </p>
+                  <input
+                    type="file"
+                    id="skillCertificates"
+                    onChange={(e) => handleFileChange(e, "skillCertificates")}
+                    className="hidden"
+                    accept="image/*,application/pdf"
+                  />
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => document.getElementById("skillCertificates")?.click()}
+                  >
+                    Upload Document
+                  </Button>
+                </>
+              )}
               <Button
                 variant="solid"
                 className="mt-4"
                 onClick={() => handleUploadDocument("skillCertificates")}
-                disabled={saving}
+                disabled={saving || !!uploadedDocuments.skillCertificatesUrl}
               >
                 {saving ? "Uploading..." : "Submit Skill Certificates"}
               </Button>
@@ -894,6 +998,56 @@ export default function ProfilePage() {
         </p>
       </CardFooter>
     </Card>
+                </TabsContent>
+
+                <TabsContent value="ratings" className="mt-4">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <CardTitle>Ratings & Reviews</CardTitle>
+                          <CardDescription>Feedback from workers</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-2xl font-bold">{RatingCount || 0}</div>
+                          {reviews.length > 0 ? (
+                  <div className="flex">{renderStars(calculateAverageStar())}</div>
+                ) : (
+                  <div className="flex">{renderStars(0)}</div>
+                )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {reviews.length > 0 ? (
+                        <div className="space-y-4">
+                          {reviews.map((review) => (
+                            <div key={review.Id} className="border rounded-lg p-4">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h3 className="font-medium">{review.GivenBy || "Anonymous"}</h3>
+                                  <div className="flex items-center gap-1 mt-1">{renderStars(review.Rating)}</div>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {new Date(review.CreatedAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <div className="mt-2">
+                                <p className="text-sm italic">"{review.Review || "No feedback provided"}"</p>
+                              </div>
+                              <Button variant="link" className="text-xs p-0 h-auto mt-2">
+                                View Details
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground">No ratings yet</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 </TabsContent>
               </Tabs>
             </div>
